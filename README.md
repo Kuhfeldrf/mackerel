@@ -6,7 +6,50 @@ A 3D-printable spearfishing throw flasher shaped and patterned like a Pacific ch
 
 **Sink test video:** [files/mackerel_sink_test_headdown.mp4](files/mackerel_sink_test_headdown.mp4) – the head-down design with its default weighting, simulated down to 10 m.
 
-## Head-down slow spiral (default design)
+## One-piece PLA prints (OSU Valley Library)
+
+The library prints PLA only (one material and colour, no multi-material). Files must be STL under 5 MB, and it charges 16¢ per gram. Every design below prints as **one piece**, so there are no halves to glue. Each file is oriented upright (back up) so the body bend lies flat in the print plane, and only the belly needs supports.
+
+| File | What it is | Size (L × W × H) | PLA | Cost |
+|---|---|---|---|---|
+| `files/onepiece/headdown_onepiece.stl` | **Head-down slow spiral**: 35° bend, 10° tail kick, sealed air voids printed inside, 10 mm bore between the eyes for lead | 222 × 97 × 61 mm | ~72 g | ~$12 |
+| `files/onepiece/headdown_kick0_onepiece.stl`, `…kick20…` | Same, with 0° / 20° tail kick (spiral tuning) | similar | ~72 g | ~$12 |
+| `files/onepiece/scurve_onepiece.stl` | S-curve, solid plastic: no lead, no air | 173 × 111 × 61 mm | ~100 g | ~$16 |
+| `files/onepiece/ucurl_onepiece.stl`, `straight_onepiece.stl` | U-curl and straight, solid plastic (not tuned for head-first) | – | ~100 g | ~$16 |
+
+Supports add a few grams.
+
+**Print request settings**
+
+| Field | Value |
+|---|---|
+| Dimensions | From the table above; the height (Z) is 61.3 mm for all |
+| Quality | Slow (0.12 mm) for the engraved pattern and tight walls; Standard (0.2 mm) also works |
+| Infill | **100% (solid)**. The simulation assumes solid plastic. The head-down file's air voids are designed into the model and stay hollow at 100% infill |
+| Colour | Silver or grey if you'll chrome/paint it |
+| Comments | "Print as oriented (back up) with tree/organic supports under the belly only. Do not scale. headdown_onepiece.stl contains two enclosed internal voids by design: please keep them (multiple shells are intentional)." |
+
+**After printing**
+
+1. Tie the line through the 2.2 mm hole running top to bottom through the head. There is no steel wire.
+2. **Head-down only:** push about 10 g of lead into the 10 mm bore between the eyes (cut lead rod, or flattened split shot). Pack it in and seal both ends with epoxy, then stick the 12 mm 3D eyes over the holes.
+3. Paint or chrome, then add a thin epoxy topcoat. This also seals the PLA so water can't reach the air voids.
+4. Test in a tub before diving. The head-down version weighs only ~2–7 g in the water, so the paint matters. If it floats or sinks too slowly, add a little lead or epoxy in the bore. If it sinks too fast or levels out, use less lead.
+
+**Simulated behaviour** (robustness check, 12 runs with varied water-force coefficients, PLA density 1.18–1.25, paint 3–9 g, lead ±1 g and toss attitude)
+
+| | Head-down one-piece (35° / 10° / 10 g lead) | S-curve one-piece (solid PLA) |
+|---|---|---|
+| Head-first | 12 / 12 (median 57°) | 12 / 12 (median 61°) |
+| Slow (≤ 0.45 m/s) | 11 / 12 (0.22–0.35 m/s) | 11 / 12 (0.19–0.22 m/s) |
+| Light flutter | 8 / 12 (median ±5°) | 10 / 12 (median ±14°) |
+| Spiral | 6 / 12, median one turn every ~8 s (uncertain: use the kick variants) | barely turns: wanders sideways instead |
+
+Plastic alone (no lead, no air) can't make a slow head-down **spiral**: solid PLA weighs ~20 g in the water, so the bent bodies drop fast and spin. The S-curve in solid PLA does give a reliable slow, head-first, fluttering fall. The sealed air voids, which print inside the single piece, are what let the head-down design sink slowly.
+
+## Two-piece versions (PETG, glued halves, tungsten ballast)
+
+### Head-down slow spiral
 
 The goal is a slow, head-first spiral with a light flutter, the way a dying baitfish sinks.
 
