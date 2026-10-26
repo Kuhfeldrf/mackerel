@@ -12,12 +12,16 @@ The library prints PLA only (one material and colour, no multi-material). Files 
 
 | File | What it is | Size (L × W × H) | PLA | Cost |
 |---|---|---|---|---|
-| `files/onepiece/headdown_onepiece.stl` | **Head-down slow spiral**: 35° bend, 10° tail kick, sealed air voids printed inside, 10 mm bore between the eyes for lead | 222 × 97 × 61 mm | ~72 g | ~$12 |
+| `files/onepiece/headdown_onepiece.stl` | **Head-down slow spiral**: 35° bend, 10° tail kick, sealed air voids printed inside, 11 mm bore between the eyes for lead (up to ~13 g) | 222 × 97 × 61 mm | ~72 g | ~$12 |
 | `files/onepiece/headdown_kick0_onepiece.stl`, `…kick20…` | Same, with 0° / 20° tail kick (spiral tuning) | similar | ~72 g | ~$12 |
 | `files/onepiece/scurve_onepiece.stl` | S-curve, solid plastic: no lead, no air | 173 × 111 × 61 mm | ~100 g | ~$16 |
 | `files/onepiece/ucurl_onepiece.stl`, `straight_onepiece.stl` | U-curl and straight, solid plastic (not tuned for head-first) | – | ~100 g | ~$16 |
 
 Supports add a few grams.
+
+**3D viewer:** the live viewer shows these one-piece prints. Turn on **X-ray: line, lead, air & balance** to see the line-tie hole and line, the lead slug between the eyes, the sealed air voids, and the balance points: centre of mass in orange, centre of buoyancy in cyan. You can also pick the lead weight and run the sink test.
+
+**Lead tuning (head-down):** 8 g barely turns; **10 g** gives a slow spiral (default); 11–13 g spin faster and sink a little faster.
 
 **Print request settings**
 
@@ -32,7 +36,7 @@ Supports add a few grams.
 **After printing**
 
 1. Tie the line through the 2.2 mm hole running top to bottom through the head. There is no steel wire.
-2. **Head-down only:** push about 10 g of lead into the 10 mm bore between the eyes (cut lead rod, or flattened split shot). Pack it in and seal both ends with epoxy, then stick the 12 mm 3D eyes over the holes.
+2. **Head-down only:** push about 10 g of lead (up to ~13 g fits) into the 11 mm bore between the eyes (cut lead rod, or flattened split shot). Pack it in and seal both ends with epoxy, then stick the 12 mm 3D eyes over the holes.
 3. Paint or chrome, then add a thin epoxy topcoat. This also seals the PLA so water can't reach the air voids.
 4. Test in a tub before diving. The head-down version weighs only ~2–7 g in the water, so the paint matters. If it floats or sinks too slowly, add a little lead or epoxy in the bore. If it sinks too fast or levels out, use less lead.
 
