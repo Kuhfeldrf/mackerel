@@ -43,15 +43,21 @@ Add or remove putty 2–3 g at a time. Packing it further forward tips the head 
 - Before gluing, hold each half under warm water: bubbles mean a leaky void.
 - Put the wire through the channel, pack the head cavity with putty and epoxy, fill the gut cavity with epoxy, set the pins, then glue the halves. Keep epoxy out of the air voids. They are sealed off from the wire channel by a 4 mm web.
 
-## All three designs
+## S-curve option
 
-| | Head-down (default) | U-curl | Straight |
-|---|---|---|---|
-| Shape | Straight body, 20° tail kick | Curled 230°, 114 × 94 mm footprint | 250 × 61 mm flattened body |
-| Halves | Back / belly | Back / belly | Left / right flank |
-| Ballast | 36 g tungsten in head + sealed air in rear | Tungsten in chamber C | Tungsten in chamber B |
-| Simulated fall | Head-down slow spiral with light flutter | U-down, rocking | Level, rocking flutter |
-| Pattern | Engraved lines, airbrush + wash | Engraved lines, airbrush + wash | Waterslide decal over chrome |
+The same head-and-air weighting in an S-shaped body: a 95° front curve and a 120° rear curve the other way, nearly as deep as the U-curl but open. Footprint is 173 × 111 mm. It prints as back and belly halves like the others.
+
+With 25 g of tungsten in the head it falls a steady ~50° head-down. It turns very slowly (about one turn every 17 s) within a ~10 cm circle and sinks at ~0.36 m/s, with almost no flutter. Charges from 15 g (slowest, ~0.25 m/s) to 36 g (faster) are simulated in the viewer.
+
+## All four designs
+
+| | Head-down (default) | S-curve | U-curl | Straight |
+|---|---|---|---|---|
+| Shape | Straight body, 20° tail kick | Two opposing curves (95° / 120°) | Curled 230° | 250 × 61 mm flattened body |
+| Halves | Back / belly | Back / belly | Back / belly | Left / right flank |
+| Ballast | 36 g tungsten in head + sealed air | 25 g tungsten in head + sealed air | Tungsten in chamber C | Tungsten in chamber B |
+| Simulated fall | Head-down spiral with light flutter | Steep head-down, very slow turn, no flutter | U-down, rocking | Level, rocking flutter |
+| Pattern | Engraved lines, airbrush + wash | Engraved lines, airbrush + wash | Engraved lines, airbrush + wash | Waterslide decal over chrome |
 
 ## Sink simulation
 
@@ -60,6 +66,7 @@ The viewer's **Sink test** plays a precomputed 6-DOF simulation for every ballas
 ## Files
 
 - `files/wounded_mackerel_BACK_half.stl`, `files/wounded_mackerel_BELLY_half.stl` – head-down design
+- `files/scurve_mackerel_BACK_half.stl`, `files/scurve_mackerel_BELLY_half.stl` – S-curve
 - `files/curled_mackerel_DORSAL_half.stl`, `files/curled_mackerel_VENTRAL_half.stl` – U-curl
 - `files/mackerel_flasher_LEFT_half.stl`, `files/mackerel_flasher_RIGHT_half.stl` – straight
 - `files/chub_mackerel_flasher_decals_and_build_sheet.pdf` – decals and build steps (straight version)
