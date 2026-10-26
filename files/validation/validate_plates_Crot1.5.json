@@ -1,0 +1,62 @@
+[
+ {
+  "beta": "1/5",
+  "measured": {
+   "vx": 14.2,
+   "vy": -8.1,
+   "omega": 25.5,
+   "regime": "tumbling"
+  },
+  "model": {
+   "vx": 12.0,
+   "vy": -11.0,
+   "omega": 26.6,
+   "regime": "tumbling"
+  }
+ },
+ {
+  "beta": "1/6",
+  "measured": {
+   "vx": 15.2,
+   "vy": -16.2,
+   "omega": 16.1,
+   "regime": "chaotic"
+  },
+  "model": {
+   "vx": 12.4,
+   "vy": -10.0,
+   "omega": 25.8,
+   "regime": "fluttering"
+  }
+ },
+ {
+  "beta": "1/8",
+  "measured": {
+   "vx": 15.9,
+   "vy": -11.5,
+   "omega": 14.5,
+   "regime": "tumbling"
+  },
+  "model": {
+   "vx": 3.2,
+   "vy": -11.4,
+   "omega": 26.6,
+   "regime": "fluttering"
+  }
+ },
+ {
+  "beta": "1/14",
+  "measured": {
+   "vx": 19.8,
+   "vy": -9.0,
+   "omega": 6.8,
+   "regime": "fluttering"
+  },
+  "model": {
+   "vx": 17.6,
+   "vy": -5.6,
+   "omega": 10.7,
+   "regime": "fluttering"
+  }
+ }
+]
