@@ -852,8 +852,7 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
     } else {
       const fz = new THREE.Vector3(0, 0, 1).applyQuaternion(qf);
       if (state.design === "wounded") {
-        fz.y = 0; if (fz.lengthSq() < 1e-4) fz.set(0, 0, 1);
-        off = fz.normalize().multiplyScalar(820).add(new THREE.Vector3(0, 90, 0));   // level side view shows the head-down tilt
+        off = new THREE.Vector3(0, 90, 900);   // fixed level side view: the spiral turns the fish past the camera; the depth rope stays behind
       } else {
         if (fz.y < 0) fz.negate();
         fz.y += 0.3;
