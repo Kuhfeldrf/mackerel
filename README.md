@@ -12,8 +12,8 @@ The library prints PLA only (one material and colour, no multi-material). Files 
 
 | File | What it is | Size (L × W × H) | PLA | Cost |
 |---|---|---|---|---|
-| `files/onepiece/headdown_onepiece.stl` | **Head-down slow spiral**: 35° bend, 10° tail kick, sealed air voids printed inside, 11 mm bore between the eyes for lead (up to ~13 g) | 222 × 97 × 61 mm | ~72 g | ~$12 |
-| `files/onepiece/headdown_kick0_onepiece.stl`, `…kick20…` | Same, with 0° / 20° tail kick (spiral tuning) | similar | ~72 g | ~$12 |
+| `files/onepiece/headdown_onepiece.stl` | **Head-down slow spiral, tuned for ~0.3 m/s**: 35° bend, 20° tail kick, sealed air voids printed inside, 11 mm bore between the eyes for lead (up to ~13 g) | 216 × 103 × 61 mm | ~72 g | ~$12 |
+| `files/onepiece/headdown_kick10_onepiece.stl`, `…kick30…` | Same, with 10° / 30° tail kick (spiral tuning) | similar | ~72 g | ~$12 |
 | `files/onepiece/scurve_onepiece.stl` | S-curve, solid plastic: no lead, no air | 173 × 111 × 61 mm | ~100 g | ~$16 |
 | `files/onepiece/ucurl_onepiece.stl`, `straight_onepiece.stl` | U-curl and straight, solid plastic (not tuned for head-first) | – | ~100 g | ~$16 |
 
@@ -21,7 +21,7 @@ Supports add a few grams.
 
 **3D viewer:** the live viewer shows these one-piece prints. Turn on **X-ray: line, lead, air & balance** to see the line-tie hole and line, the lead slug between the eyes, the sealed air voids, and the balance points: centre of mass in orange, centre of buoyancy in cyan. You can also pick the lead weight and run the sink test.
 
-**Lead tuning (head-down):** 8 g barely turns; **10 g** gives a slow spiral (default); 11–13 g spin faster and sink a little faster.
+**Lead tuning (head-down):** start with about 11 g, then trim to the target weight below. Lighter sinks slower and spirals more slowly; heavier sinks faster and starts to spin.
 
 **Print request settings**
 
@@ -36,18 +36,27 @@ Supports add a few grams.
 **After printing**
 
 1. Tie the line through the 2.2 mm hole running top to bottom through the head. There is no steel wire.
-2. **Head-down only:** push about 10 g of lead (up to ~13 g fits) into the 11 mm bore between the eyes (cut lead rod, or flattened split shot). Pack it in and seal both ends with epoxy, then stick the 12 mm 3D eyes over the holes.
-3. Paint or chrome, then add a thin epoxy topcoat. This also seals the PLA so water can't reach the air voids.
-4. Test in a tub before diving. The head-down version weighs only ~2–7 g in the water, so the paint matters. If it floats or sinks too slowly, add a little lead or epoxy in the bore. If it sinks too fast or levels out, use less lead.
+2. **Head-down only:** paint/chrome and topcoat the fish first. The topcoat also seals the PLA so water can't reach the air voids. Leave the eye bore open.
+3. **Trim the lead to 5.0 g in-water weight** (the tuned setting for ~0.3 m/s):
+   - Tape over both eye holes so the bore stays dry.
+   - Put a bowl of fresh water on a kitchen scale (0.1 g if you can) and tare it. Hang the fish from a thread so it is fully under water without touching the bowl. Read the scale: **B** (about 81 g = its volume in cc).
+   - Weigh the fish dry, with the lead you plan to use (start with about 11 g, 13 g max: cut lead rod or flattened split shot) and about 0.5 g for the epoxy plugs: **D**.
+   - In-water weight in the **sea** = **D − 1.025 × B**. Adjust the lead until this is **5.0 g**. (In fresh water the same fish weighs about 2 g more in the water.)
+   - Push the lead into the bore, seal both ends with epoxy, and stick the 12 mm 3D eyes over the holes.
+4. **Tub/pool check:** it should sink nose-down at about 55°, rocking gently. In the sea, 1 m should take about 3–4 s.
+   - If it spins faster than about one turn per 2 s, switch to the 30° kick file or use 1 g less lead.
+   - If it barely turns, switch to the 10° kick file.
 
-**Simulated behaviour** (robustness check, 12 runs with varied water-force coefficients, PLA density 1.18–1.25, paint 3–9 g, lead ±1 g and toss attitude)
+**Simulated behaviour** (robustness check, 12 runs with varied water-force coefficients, PLA density 1.18–1.25, paint 3–9 g, putty position and toss attitude; head-down builds trimmed to 5.0 g in sea water as above)
 
-| | Head-down one-piece (35° / 10° / 10 g lead) | S-curve one-piece (solid PLA) |
+| | Head-down one-piece (35° bend / 20° kick, trimmed to 5.0 g) | S-curve one-piece (solid PLA) |
 |---|---|---|
-| Head-first | 12 / 12 (median 57°) | 12 / 12 (median 61°) |
-| Slow (≤ 0.45 m/s) | 11 / 12 (0.22–0.35 m/s) | 11 / 12 (0.19–0.22 m/s) |
-| Light flutter | 8 / 12 (median ±5°) | 10 / 12 (median ±14°) |
-| Spiral | 6 / 12, median one turn every ~8 s (uncertain: use the kick variants) | barely turns: wanders sideways instead |
+| Head-first | 12 / 12 (median 55°) | 12 / 12 (median 61°) |
+| Sink rate | **0.25 / 0.28 / 0.32 m/s** (10th / median / 90th), 10 / 12 within 0.26–0.34 | 0.19–0.22 m/s |
+| Light flutter | 12 / 12 (median ±10°) | 10 / 12 (median ±14°) |
+| Spiral | median one turn every ~3 s; slow spiral in 5 / 12 (uncertain: use the kick variants) | barely turns: wanders sideways instead |
+
+Without the trim step, paint and PLA-density variation alone spread the in-water weight from 2 to 7 g and the sink rate from 0.17 to 0.31 m/s. Trimming to a measured in-water weight is what makes the ~0.3 m/s target repeatable.
 
 Plastic alone (no lead, no air) can't make a slow head-down **spiral**: solid PLA weighs ~20 g in the water, so the bent bodies drop fast and spin. The S-curve in solid PLA does give a reliable slow, head-first, fluttering fall. The sealed air voids, which print inside the single piece, are what let the head-down design sink slowly.
 
