@@ -2,7 +2,7 @@
 
 A 3D-printable spearfishing throw flasher shaped and patterned like a Pacific chub mackerel (*Scomber japonicus*), weighted to sink like a dead or wounded baitfish.
 
-**This branch:** in the head-down sink test, a wahoo cruises past at 5 m, circles back and hits the flasher at 8 m. Same print files and physics as `onepiece-pla`; the wahoo is just for fun.
+**This branch:** in the head-down sink test, a wahoo cruises past at 3 m, circles back from 5 to 8 m and hits the flasher at 8 m. Same print files and physics as `onepiece-pla`; the wahoo is just for fun.
 
 **Live 3D viewer and sink test:** https://kuhfeldrf.github.io/mackerel/
 

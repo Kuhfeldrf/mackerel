@@ -898,13 +898,14 @@ body.record .badge span { font-size: 13px; }
     const tp = WAHOO.tPass, ts = WAHOO.tStrike, { R, B, U } = camFrame();
     const at = (base, r, u, b) => base.clone().addScaledVector(R, r).addScaledVector(U, u).addScaledVector(B, b);
     let pos, dir, swim = 1;
-    if (t < tp - 6 || t > ts + 2.5) { wahoo.visible = false; fish.visible = true; return; }
-    if (t < tp + 3) {                                   // pass: screen-left -> right, 2.6 m behind, level with the flasher
-      const u = (t - (tp - 6)) / 9;
+    const tc = WAHOO.tCircle;
+    if (t < tp - 4 || t > ts + 2.5) { wahoo.visible = false; fish.visible = true; return; }
+    if (t < tc) {                                       // pass at 3 m: screen-left -> right, 2.6 m behind, level with the flasher
+      const u = (t - (tp - 4)) / (tc - (tp - 4));
       pos = at(WAHOO.p5, -4500 + 9000 * u, 250 + 120 * Math.sin(u * 6), 2600);
       dir = R.clone().addScaledVector(U, 0.02 * Math.cos(u * 6)).normalize();
-    } else if (t < ts - 1.6) {                          // circle back on the far side, descending toward 8 m
-      const u = (t - (tp + 3)) / ((ts - 1.6) - (tp + 3));
+    } else if (t < ts - 1.6) {                          // 5-8 m: circle back on the far side, descending toward 8 m
+      const u = (t - tc) / ((ts - 1.6) - tc);
       const ang = u * Math.PI;                          // half circle: right side -> far side -> left side
       const rad = 3200 - 600 * u;
       const ctr = at(WAHOO.p8, 0, 900 - 900 * u + (WAHOO.p5.y - WAHOO.p8.y) * (1 - u), 1800);
@@ -934,10 +935,10 @@ body.record .badge span { font-size: 13px; }
     WAHOO.tPass = null; WAHOO.struck = false;
     wahoo.children.forEach(m => { if (m.material) { m.material.transparent = false; m.material.opacity = 1; } });
     if (state.design !== "wounded") return;
-    const t5 = timeAtDepth(5), t8 = timeAtDepth(8);
-    if (t5 === null || t8 === null) return;
-    WAHOO.tPass = t5; WAHOO.tStrike = t8;
-    WAHOO.p5 = flasherAt(t5); WAHOO.p8 = flasherAt(t8);
+    const t3 = timeAtDepth(3), t5 = timeAtDepth(5), t8 = timeAtDepth(8);
+    if (t3 === null || t5 === null || t8 === null) return;
+    WAHOO.tPass = t3; WAHOO.tCircle = t5; WAHOO.tStrike = t8;
+    WAHOO.p5 = flasherAt(t3); WAHOO.p8 = flasherAt(t8);
     WAHOO.strikeDir = new THREE.Vector3(1, 0, 0);
     sim.dur = Math.min(sim.dur, t8 + 2.5);
   }
@@ -1072,8 +1073,8 @@ body.record .badge span { font-size: 13px; }
       const cap = el("hCap");
       if (sim.t >= WAHOO.tStrike) cap.textContent = "8 m: WAHOO! It hit the flasher. Shoot now.";
       else if (sim.t >= WAHOO.tStrike - 1.6) cap.textContent = "Here it comes...";
-      else if (sim.t >= WAHOO.tPass + 3) cap.textContent = "It's circling back. Stay still, keep the flasher sinking.";
-      else if (sim.t >= WAHOO.tPass - 6) cap.textContent = "5 m: a wahoo cruises past and clocks the flash.";
+      else if (sim.t >= WAHOO.tCircle) cap.textContent = "5 m: it's circling back. Stay still, keep the flasher sinking.";
+      else if (sim.t >= WAHOO.tPass - 4) cap.textContent = "3 m: a wahoo cruises past and clocks the flash.";
       else cap.textContent = WAHOO.cap0;
     }
     const sc = el("simScrub"); if (document.activeElement !== sc) sc.value = sim.t.toFixed(2);
