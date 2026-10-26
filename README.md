@@ -52,7 +52,7 @@ Other adjustments:
 
 The same head-and-air weighting in an S-shaped body: a 95° front curve and a 120° rear curve the other way, nearly as deep as the U-curl but open. Footprint is 173 × 111 mm. It prints as back and belly halves like the others.
 
-With 25 g of tungsten in the head it falls a steady ~50° head-down. It turns very slowly (about one turn every 17 s) within a ~10 cm circle and sinks at ~0.36 m/s, with almost no flutter. Charges from 15 g (slowest, ~0.25 m/s) to 36 g (faster) are simulated in the viewer.
+With 25 g of tungsten in the head, the calibrated model has it sink very slowly (~0.21 m/s) and steeply head-first (~65°), turning once every ~10 s within a ~5 cm circle. Its two opposing curves make it very stable, so it does not flutter: it is the steady option. Use the head-down design for flutter. Charges from 15 g (slowest, ~0.14 m/s) to 36 g (~0.26 m/s) are simulated in the viewer.
 
 ## All four designs
 
@@ -61,12 +61,12 @@ With 25 g of tungsten in the head it falls a steady ~50° head-down. It turns ve
 | Shape | 30° body bend, 20° tail kick | Two opposing curves (95° / 120°) | Curled 230° | 250 × 61 mm flattened body |
 | Halves | Back / belly | Back / belly | Back / belly | Left / right flank |
 | Ballast | 12 g tungsten in head + sealed air | 25 g tungsten in head + sealed air | Tungsten in chamber C | Tungsten in chamber B |
-| Simulated fall | Head-down spiral with light flutter | Steep head-down, very slow turn, no flutter | U-down, rocking | Level, rocking flutter |
+| Simulated fall | Head-down (~52°), light flutter, spiral, ~0.3 m/s | Steep head-down (~65°), slow turn, no flutter, ~0.2 m/s | U-down, rocking ±25°, ~0.2 m/s | Head-first, rocking, fast (~0.9 m/s) |
 | Pattern | Engraved lines, airbrush + wash | Engraved lines, airbrush + wash | Engraved lines, airbrush + wash | Waterslide decal over chrome |
 
 ## Sink simulation
 
-The viewer's **Sink test** plays a precomputed 6-DOF simulation for every ballast setup. It models buoyancy, pressure drag on each surface facet, skin friction, added mass with the Munk moment, and quasi-steady circulation lift on the flanks. It is a simplified model meant for comparing setups, not for exact numbers.
+The viewer's **Sink test** plays the calibrated strip-model simulation (see above) for every ballast setup of all four designs. The default head-down setup also shows its robustness-check result. The U-curl and straight bodies use the same model, but they were not re-tuned for the head-first target.
 
 ## Files
 
