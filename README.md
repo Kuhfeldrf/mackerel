@@ -21,7 +21,7 @@ Supports add a few grams.
 
 **3D viewer:** the live viewer shows these one-piece prints. Turn on **X-ray: line, lead, air & balance** to see the line-tie hole and line, the lead slug between the eyes, the sealed air voids, and the balance points: centre of mass in orange, centre of buoyancy in cyan. You can also pick the lead weight and run the sink test.
 
-**Lead tuning (head-down):** start with about 11 g, then trim to the target weight below. Lighter sinks slower and spirals more slowly; heavier sinks faster and starts to spin.
+**Lead tuning (head-down):** start with about 10–11 g, then trim to the target weight below. Lighter sinks slower and spirals more slowly; heavier sinks faster and starts to spin.
 
 **Print request settings**
 
@@ -40,7 +40,7 @@ Supports add a few grams.
 3. **Trim the lead to 5.0 g in-water weight** (the tuned setting for ~0.3 m/s):
    - Tape over both eye holes so the bore stays dry.
    - Put a bowl of fresh water on a kitchen scale (0.1 g if you can) and tare it. Hang the fish from a thread so it is fully under water without touching the bowl. Read the scale: **B** (about 81 g = its volume in cc).
-   - Weigh the fish dry, with the lead you plan to use (start with about 11 g, 13 g max: cut lead rod or flattened split shot) and about 0.5 g for the epoxy plugs: **D**.
+   - Weigh the fish dry, with the lead you plan to use (start with about 10–11 g, 13 g max: cut lead rod or flattened split shot) and about 0.5 g for the epoxy plugs: **D**.
    - In-water weight in the **sea** = **D − 1.025 × B**. Adjust the lead until this is **5.0 g**. (In fresh water the same fish weighs about 2 g more in the water.)
    - Push the lead into the bore, seal both ends with epoxy, and stick the 12 mm 3D eyes over the holes.
 4. **Tub/pool check:** it should sink nose-down at about 55°, rocking gently. In the sea, 1 m should take about 3–4 s.
