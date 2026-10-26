@@ -190,7 +190,7 @@ body.record .badge span { font-size: 13px; }
   <div class="stage" id="stage">
     <div class="shade" id="shade"></div>
     <div class="labels" id="labels"></div>
-    <div class="badge" id="badge"><span id="badgeText">Head-down flutter</span><span id="simBadge" hidden>Simulated</span></div>
+    <div class="badge" id="badge"><span id="badgeText">Head-down flutter</span><span id="funnyBadge">funny branch · wahoo edition</span><span id="simBadge" hidden>Simulated</span></div>
     <div class="gauge" id="gauge" hidden></div>
     <div class="hud" id="hud" hidden>
       <div><small>Depth</small><b id="hDepth">0.00 m</b></div>
@@ -833,6 +833,129 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
     return runCache[k];
   }
   const water = new THREE.Group(); water.visible = false; scene.add(water);
+
+  // ---- the wahoo (funny branch): a ~1.5 m procedural Acanthocybium, attracted by the flash
+  const wahoo = new THREE.Group(); wahoo.visible = false; scene.add(wahoo);
+  const WL = 1200;                                       // mm
+  (function buildWahoo() {
+    const segs = 40, rings = 18, V = [], N = [], UV = [], F = [];
+    const prof = u => {                                  // half-height / half-width along the body
+      const h = 0.085 * Math.sin(Math.PI * Math.pow(u, 0.8)) + 0.012 * (1 - u);
+      return [h * WL, 0.55 * h * WL];
+    };
+    for (let i = 0; i <= segs; i++) {
+      const u = i / segs, [a, b] = prof(u);
+      for (let j = 0; j <= rings; j++) {
+        const th = j / rings * 2 * Math.PI, cy = Math.cos(th), sz = Math.sin(th);
+        V.push(u * WL, a * cy, b * sz); N.push(0, cy / a, sz / b); UV.push(u, j / rings);
+      }
+    }
+    for (let i = 0; i < segs; i++) for (let j = 0; j < rings; j++) {
+      const p = i * (rings + 1) + j, q = p + rings + 1;
+      F.push(p, p + 1, q, p + 1, q + 1, q);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(V, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(UV, 2));
+    g.setIndex(F); g.computeVertexNormals();
+    // vertical bars: dark steel-blue back fading to silver belly, 25 wavy bars
+    const cv = document.createElement("canvas"); cv.width = 1024; cv.height = 256;
+    const cx = cv.getContext("2d");
+    const grd = cx.createLinearGradient(0, 0, 0, 256);
+    grd.addColorStop(0, "#1b3a52"); grd.addColorStop(0.28, "#1b3a52"); grd.addColorStop(0.5, "#7f98a8");
+    grd.addColorStop(0.75, "#d9e3ea"); grd.addColorStop(1, "#1b3a52");
+    cx.fillStyle = grd; cx.fillRect(0, 0, 1024, 256);
+    cx.strokeStyle = "rgba(20,45,70,.75)"; cx.lineWidth = 7;
+    for (let k = 0; k < 26; k++) {
+      const x = 160 + k * 31;
+      cx.beginPath();
+      for (let y = 0; y <= 256; y += 8) cx.lineTo(x + 6 * Math.sin(y / 22 + k), y);
+      cx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.wrapT = THREE.RepeatWrapping;
+    const body = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: tex, metalness: 0.55, roughness: 0.3, envMapIntensity: 1.1 }));
+    body.rotation.z = 0; wahoo.add(body);
+    const finMat = new THREE.MeshStandardMaterial({ color: 0x1d3f5a, metalness: 0.3, roughness: 0.5, side: THREE.DoubleSide });
+    // tail (lunate), dorsal (long low first dorsal), pectorals
+    const tri = (pts) => { const sh = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], p[1]))); return new THREE.ShapeGeometry(sh); };
+    const tailM = new THREE.Mesh(tri([[0, 0], [100, 190], [20, 0], [100, -190]]), finMat); tailM.position.x = WL - 10; wahoo.add(tailM);
+    const dors = new THREE.Mesh(tri([[0, 0], [40, 95], [330, 70], [540, 30], [560, 0]]), finMat); dors.position.set(0.28 * WL, 0.075 * WL, 0); wahoo.add(dors);
+    const dors2 = new THREE.Mesh(tri([[0, 0], [30, 70], [90, 0]]), finMat); dors2.position.set(0.70 * WL, 0.05 * WL, 0); wahoo.add(dors2);
+    const anal = new THREE.Mesh(tri([[0, 0], [30, -65], [90, 0]]), finMat); anal.position.set(0.72 * WL, -0.045 * WL, 0); wahoo.add(anal);
+    [1, -1].forEach(sgn => {
+      const pec = new THREE.Mesh(tri([[0, 0], [150, -30], [60, -110]]), finMat);
+      pec.position.set(0.3 * WL, -0.01 * WL, sgn * 0.05 * WL); pec.rotation.x = sgn * 0.9; wahoo.add(pec);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(12, 16, 12), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 }));
+      eye.position.set(0.09 * WL, 0.02 * WL, sgn * 0.052 * WL * 0.9); wahoo.add(eye);
+    });
+    // jaw line
+    const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.11 * WL, 2, 0.08 * WL), new THREE.MeshStandardMaterial({ color: 0x0e2230 }));
+    jaw.position.set(0.055 * WL, -0.012 * WL, 0); wahoo.add(jaw);
+  })();
+  // wahoo script, in seconds relative to the flasher reaching 5 m (pass) and 8 m (strike)
+  const WAHOO = { seen: false, struck: false, tPass: 0, tStrike: 0 };
+  const wTmp = new THREE.Vector3(), wTmp2 = new THREE.Vector3();
+  function flasherAt(t) { simPose(t); return simRoot.position.clone(); }
+  function timeAtDepth(d) {
+    const r = sim.run; let lo = 0, hi = sim.dur;
+    if (depthAt(hi) < d) return null;
+    for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; (depthAt(m) < d ? (lo = m) : (hi = m)); }
+    return (lo + hi) / 2;
+  }
+  // camera-relative frame: R = screen right, U = up, B = away from the camera (behind the flasher)
+  function camFrame() {
+    const B = new THREE.Vector3().subVectors(controls.target, camera.position); B.y = 0; B.normalize();
+    const R = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), B).normalize();
+    return { R, B, U: new THREE.Vector3(0, 1, 0) };
+  }
+  function wahooUpdate(t) {
+    if (!sim.on || state.design !== "wounded" || WAHOO.tPass === null) { wahoo.visible = false; fish.visible = true; return; }
+    const tp = WAHOO.tPass, ts = WAHOO.tStrike, { R, B, U } = camFrame();
+    const at = (base, r, u, b) => base.clone().addScaledVector(R, r).addScaledVector(U, u).addScaledVector(B, b);
+    let pos, dir, swim = 1;
+    if (t < tp - 6 || t > ts + 2.5) { wahoo.visible = false; fish.visible = true; return; }
+    if (t < tp + 3) {                                   // pass: screen-left -> right, 2.6 m behind, level with the flasher
+      const u = (t - (tp - 6)) / 9;
+      pos = at(WAHOO.p5, -4500 + 9000 * u, 250 + 120 * Math.sin(u * 6), 2600);
+      dir = R.clone().addScaledVector(U, 0.02 * Math.cos(u * 6)).normalize();
+    } else if (t < ts - 1.6) {                          // circle back on the far side, descending toward 8 m
+      const u = (t - (tp + 3)) / ((ts - 1.6) - (tp + 3));
+      const ang = u * Math.PI;                          // half circle: right side -> far side -> left side
+      const rad = 3200 - 600 * u;
+      const ctr = at(WAHOO.p8, 0, 900 - 900 * u + (WAHOO.p5.y - WAHOO.p8.y) * (1 - u), 1800);
+      pos = ctr.clone().addScaledVector(R, rad * Math.cos(ang)).addScaledVector(B, rad * Math.sin(ang) * 0.6);
+      const nxt = ctr.clone().addScaledVector(R, rad * Math.cos(ang + 0.06)).addScaledVector(B, rad * Math.sin(ang + 0.06) * 0.6);
+      dir = nxt.sub(pos).normalize(); swim = 1.3;
+    } else if (t < ts) {                                // strike: from screen-left, slightly behind, straight at the flasher
+      const u = (t - (ts - 1.6)) / 1.6, e = u * u;
+      const start = at(WAHOO.p8, -3400, 300, 700);
+      pos = start.clone().lerp(WAHOO.p8, e);
+      dir = WAHOO.p8.clone().sub(start).normalize(); swim = 2.5;
+      WAHOO.strikeDir = dir;
+    } else {                                            // follow-through: carries it off to screen-right, fading
+      const u = (t - ts) / 2.5;
+      pos = WAHOO.p8.clone().addScaledVector(WAHOO.strikeDir, 6000 * u);
+      dir = WAHOO.strikeDir; swim = 2.5;
+      wahoo.children.forEach(m => { if (m.material) { m.material.transparent = true; m.material.opacity = 1 - u; } });
+    }
+    wahoo.visible = true;
+    wahoo.position.copy(pos).addScaledVector(dir, -0.5 * WL);
+    wahoo.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
+    const beat = Math.sin(t * 7 * swim) * 0.06 * swim;
+    wahoo.children.forEach((m, i) => { if (i === 0) m.rotation.y = beat * 0.3; else if (m.position.x > 0.6 * WL) m.rotation.y = beat; });
+    fish.visible = t < ts;
+  }
+  function wahooPlan() {
+    WAHOO.tPass = null; WAHOO.struck = false;
+    wahoo.children.forEach(m => { if (m.material) { m.material.transparent = false; m.material.opacity = 1; } });
+    if (state.design !== "wounded") return;
+    const t5 = timeAtDepth(5), t8 = timeAtDepth(8);
+    if (t5 === null || t8 === null) return;
+    WAHOO.tPass = t5; WAHOO.tStrike = t8;
+    WAHOO.p5 = flasherAt(t5); WAHOO.p8 = flasherAt(t8);
+    WAHOO.strikeDir = new THREE.Vector3(1, 0, 0);
+    sim.dur = Math.min(sim.dur, t8 + 2.5);
+  }
   const fogSim = new THREE.Fog(0x0b3144, 650, 5200);
   (function buildWater() {
     const ROPE_X = -520, ROPE_Z = -760;
@@ -884,6 +1007,7 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
   }
   const followD = new THREE.Vector3();
   function follow() {
+    if (WAHOO.tPass !== null && sim.t >= WAHOO.tStrike) return;     // hold the camera at the strike point
     followD.subVectors(simRoot.position, controls.target);
     camera.position.add(followD); controls.target.copy(simRoot.position);
   }
@@ -901,7 +1025,7 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
     } else {
       const fz = new THREE.Vector3(0, 0, 1).applyQuaternion(qf);
       if (state.design === "wounded") {
-        off = new THREE.Vector3(0, 90, 900);   // fixed level side view: the spiral turns the fish past the camera; the depth rope stays behind
+        off = new THREE.Vector3(0, 120, 3800);   // fixed level side view (wide for the wahoo): the spiral turns the fish past the camera; the depth rope stays behind
       } else {
         if (fz.y < 0) fz.negate();
         fz.y += 0.3;
@@ -958,6 +1082,15 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
     gMark.style.top = Math.min(100, Math.max(0, d * 10)) + "%";
     el("shade").style.opacity = (Math.min(1, Math.max(0, d) / 10) * 0.4).toFixed(3);
     trailGeo.setDrawRange(0, Math.min(sim.run.n, Math.floor(sim.t * SINK.hz) + 1));
+    wahooUpdate(sim.t);
+    if (WAHOO.tPass !== null) {
+      const cap = el("hCap");
+      if (sim.t >= WAHOO.tStrike) cap.textContent = "8 m: WAHOO! It hit the flasher. Shoot now.";
+      else if (sim.t >= WAHOO.tStrike - 1.6) cap.textContent = "Here it comes...";
+      else if (sim.t >= WAHOO.tPass + 3) cap.textContent = "It's circling back. Stay still, keep the flasher sinking.";
+      else if (sim.t >= WAHOO.tPass - 6) cap.textContent = "5 m: a wahoo cruises past and clocks the flash.";
+      else cap.textContent = WAHOO.cap0;
+    }
     const sc = el("simScrub"); if (document.activeElement !== sc) sc.value = sim.t.toFixed(2);
     needsRender = true;
   }
@@ -988,12 +1121,14 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
     const ff = state.fills[state.design];
     el("simBadge").textContent = "Simulated · " + (ff.LEAD ? "PLA, " + ff.LEAD + " g lead between the eyes" : "solid PLA, no ballast");
     el("hCap").textContent = motionTitle(run.s) + ": " + simCaption(run.s);
+    WAHOO.cap0 = el("hCap").textContent;
+    wahooPlan(); el("simScrub").max = sim.dur.toFixed(2);
     el("simNote").textContent = "Strip-model physics calibrated on falling-plate experiments: buoyancy, cross-flow drag and lift on each body slice, added mass, tail-fin lift. Compare setups here, then pool-test.";
     simPose(0); simCamera(); simUpdate(); simButtons();
     return true;
   }
   function simExit() {
-    sim.on = false; sim.playing = false; water.visible = false; scene.fog = null;
+    sim.on = false; sim.playing = false; water.visible = false; scene.fog = null; wahoo.visible = false; fish.visible = true;
     simRoot.position.set(0, 0, 0); simRoot.quaternion.identity();
     el("shade").style.opacity = 0;
     applyGeometry(); fitCamera(); simButtons();

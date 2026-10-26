@@ -1,0 +1,1176 @@
+<title>Chub Mackerel Flasher</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/* Layout: one screen. A lit "tank" holds the 3D model on the left; a tackle-card control panel sits on the right.
+   Below 820px the tank stacks above the panel and the page scrolls. Single deliberate dark look (underwater). */
+:root {
+  --abyss: #06141d;
+  --panel: #0c1e29;
+  --panel-hi: #143241;
+  --line: #1f3c4c;
+  --fg: #dbe7ec;
+  --muted: #8ca8b5;
+  --brass: #d9bf68;
+  --tungsten: #9aa6ae;
+  --epoxy: #d6a443;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--abyss); color: var(--fg);
+  font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+  box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px;
+}
+*, *::before, *::after { box-sizing: inherit; }
+[hidden] { display: none !important; }
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 348px; gap: 16px; height: 100%; }
+.stage {
+  position: relative; min-width: 0; overflow: hidden; border-radius: 6px; border: 1px solid var(--line);
+  background:
+    radial-gradient(70% 55% at 50% -5%, rgba(160, 220, 240, .32), transparent 70%),
+    linear-gradient(180deg, #1b5a76 0%, #0d3346 48%, #071a25 100%);
+}
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.labels { position: absolute; inset: 0; pointer-events: none; }
+.labels span {
+  position: absolute; transform: translate(-50%, -50%);
+  font: 500 11px/1 var(--font-mono); letter-spacing: .04em;
+  padding: 3px 5px; border-radius: 3px; background: rgba(6, 20, 29, .78); color: var(--fg);
+  border: 1px solid var(--line); white-space: nowrap;
+}
+.labels span.full { border-color: var(--tungsten); color: #fff; }
+.hint {
+  position: absolute; left: 12px; bottom: 10px; right: 12px;
+  font: 400 11px/1.3 var(--font-mono); color: rgba(219, 231, 236, .7); pointer-events: none;
+}
+.badge {
+  position: absolute; top: 12px; left: 12px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none;
+}
+.badge span {
+  font: 500 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
+  padding: 5px 7px; border-radius: 3px; background: rgba(6, 20, 29, .6); border: 1px solid rgba(217, 191, 104, .5); color: var(--brass);
+}
+.err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+
+.panel { min-width: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding-bottom: 8px; }
+header { display: grid; gap: 6px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.eyebrow { font: italic 400 12px/1.2 var(--font-mono); color: var(--brass); letter-spacing: .02em; }
+h1 {
+  margin: 0; font-family: var(--font-display); font-stretch: 68%; font-weight: 800;
+  font-size: 34px; line-height: .95; text-transform: uppercase; letter-spacing: .005em; text-wrap: balance;
+}
+header p { margin: 0; color: var(--muted); max-width: 60ch; }
+section { display: grid; gap: 8px; }
+h2 {
+  margin: 0; font: 600 11px/1 var(--font-body); font-stretch: 90%;
+  text-transform: uppercase; letter-spacing: .12em; color: var(--muted);
+}
+.seg {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; padding: 3px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--abyss);
+}
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label {
+  padding: 8px 6px; border-radius: 4px; text-align: center; cursor: pointer;
+  color: var(--muted); font-weight: 600; font-stretch: 88%; user-select: none;
+}
+.seg label:hover { color: var(--fg); }
+.seg label { white-space: nowrap; }
+#h-design + .seg label { padding: 8px 2px; font-size: 13px; }
+.seg input:checked + label { background: var(--panel-hi); color: var(--fg); box-shadow: inset 0 0 0 1px var(--brass); }
+.seg input:focus-visible + label { outline: 2px solid var(--brass); outline-offset: 1px; }
+
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.curl-read { font: 500 22px/1 var(--font-mono); color: var(--fg); }
+.note { font-size: 12px; color: var(--muted); }
+.note.warn { color: var(--brass); }
+input[type="range"] { width: 100%; accent-color: var(--brass); }
+input[type="range"]:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+
+.toggles { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 4px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; font: inherit; font-weight: 600; font-stretch: 90%;
+}
+.chip input { accent-color: var(--brass); margin: 0; }
+.chip:hover { border-color: var(--muted); }
+.chip:focus-within, button.chip:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+
+.chambers { display: grid; gap: 4px; }
+.chamber {
+  display: grid; grid-template-columns: auto 44px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 4px; background: var(--panel); border: 1px solid var(--line); cursor: pointer;
+}
+.chamber:hover { border-color: var(--muted); }
+.chamber:focus-within { outline: 2px solid var(--brass); outline-offset: 1px; }
+.chamber input { accent-color: var(--brass); margin: 0; }
+.chamber .tag { font: 600 12px/1 var(--font-mono); padding: 4px 0; text-align: center; border-radius: 3px; background: var(--epoxy); color: #241a05; }
+.chamber.full .tag { background: var(--tungsten); color: #0b1419; }
+.chamber.air .tag { background: #9fd3e6; color: #08222d; }
+.chamber.air { cursor: default; }
+.chamber .seg { grid-column: 2 / -1; }
+.chamber .seg label { padding: 5px 4px; font-family: var(--font-mono); font-weight: 500; font-size: 12px; }
+.chamber .desc { color: var(--muted); font-size: 12.5px; min-width: 0; }
+.chamber .cc { font: 400 12px var(--font-mono); color: var(--muted); }
+
+.readout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.readout div { background: var(--panel); padding: 9px 10px; display: grid; gap: 4px; }
+.readout b { font: 500 18px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.readout small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.behaviour { padding: 9px 11px; border-left: 2px solid var(--brass); background: var(--panel); border-radius: 0 4px 4px 0; }
+.behaviour strong { display: block; font-stretch: 90%; }
+.behaviour span { color: var(--muted); font-size: 12.5px; }
+
+dl.specs { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; }
+dl.specs dt { color: var(--muted); font-size: 12.5px; }
+dl.specs dd { margin: 0; font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+.shade { position: absolute; inset: 0; background: #01070c; opacity: 0; pointer-events: none; }
+.hud {
+  position: absolute; left: 12px; bottom: 34px; display: grid; grid-template-columns: repeat(3, auto); gap: 4px 18px;
+  padding: 10px 12px; border-radius: 4px; background: rgba(6, 20, 29, .72); border: 1px solid var(--line); pointer-events: none;
+}
+.hud > div { display: grid; gap: 3px; }
+.hud small { font: 600 10px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.hud b { font: 500 20px/1.1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.hud .cap { grid-column: 1 / -1; font-size: 12.5px; color: var(--fg); max-width: 46ch; }
+.gauge {
+  position: absolute; right: 14px; top: 52px; bottom: 52px; width: 46px; pointer-events: none;
+  border-left: 2px solid rgba(219, 231, 236, .55);
+}
+.gauge span { position: absolute; left: 0; transform: translateY(-50%); font: 400 10px/1 var(--font-mono); color: rgba(219, 231, 236, .75); padding-left: 10px; }
+.gauge span::before { content: ""; position: absolute; left: 0; top: 50%; width: 7px; border-top: 1px solid rgba(219, 231, 236, .55); }
+.gauge i { position: absolute; left: -8px; width: 14px; height: 14px; margin-top: -7px; border-radius: 50%; background: var(--brass); box-shadow: 0 0 0 3px rgba(217, 191, 104, .25); }
+.chip.go { background: var(--brass); color: #1d1604; border-color: var(--brass); }
+.chip.go:hover { filter: brightness(1.08); }
+.simctl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.seg.seg-sm label { padding: 5px 9px; font-family: var(--font-mono); font-weight: 500; }
+body.record { padding: 0; }
+body.record .app { grid-template-columns: minmax(0, 1fr); gap: 0; }
+body.record .panel, body.record .hint { display: none; }
+body.record .stage { border: 0; border-radius: 0; }
+body.record .hud { left: 24px; bottom: 24px; }
+body.record .hud b { font-size: 26px; }
+body.record .badge span { font-size: 13px; }
+@media (max-width: 820px) {
+  html, body { height: auto; }
+  .app { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .stage { height: 62vh; min-height: 320px; max-height: 620px; }
+  .panel { overflow: visible; }
+  h1 { font-size: 30px; }
+  .hud b { font-size: 16px; }
+  .gauge { width: 38px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <div class="stage" id="stage">
+    <div class="shade" id="shade"></div>
+    <div class="labels" id="labels"></div>
+    <div class="badge" id="badge"><span id="badgeText">Head-down flutter</span><span id="funnyBadge">funny branch · wahoo edition</span><span id="simBadge" hidden>Simulated</span></div>
+    <div class="gauge" id="gauge" hidden></div>
+    <div class="hud" id="hud" hidden>
+      <div><small>Depth</small><b id="hDepth">0.00 m</b></div>
+      <div><small>Time</small><b id="hTime">0.0 s</b></div>
+      <div><small>Sink rate</small><b id="hRate">0.00 m/s</b></div>
+      <div class="cap" id="hCap"></div>
+    </div>
+    <div class="hint">Drag to orbit · scroll or pinch to zoom · right-drag or two-finger drag to pan</div>
+  </div>
+
+  <aside class="panel">
+    <header>
+      <div class="eyebrow">Scomber japonicus · throw flasher</div>
+      <h1>Chub Mackerel Flasher</h1>
+      <p>A 3D-printed, chrome-finished throw flasher for spearfishing. Each body prints as one piece in PLA. The head-down "wounded bait" carries a lead slug between the eyes and sealed air inside, so it spirals and flutters as it sinks. The S-curve, U-curl and straight bodies are solid plastic.</p>
+    </header>
+
+    <section aria-labelledby="h-design">
+      <h2 id="h-design">Design</h2>
+      <div class="seg" role="radiogroup" aria-labelledby="h-design">
+        <input type="radio" name="design" id="d-wounded" value="wounded" checked><label for="d-wounded">Head-down</label>
+        <input type="radio" name="design" id="d-scurve" value="scurve"><label for="d-scurve">S-curve</label>
+        <input type="radio" name="design" id="d-curled" value="curled"><label for="d-curled">U-curl</label>
+        <input type="radio" name="design" id="d-straight" value="straight"><label for="d-straight">Straight</label>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-sink">
+      <div class="row"><h2 id="h-sink">Sink test</h2><span class="note">physics simulation</span></div>
+      <div class="toggles">
+        <button class="chip go" type="button" id="simPlay">Drop it in the water</button>
+        <button class="chip" type="button" id="simExit" hidden>Back to the model</button>
+      </div>
+      <div class="simctl" id="simCtl" hidden>
+        <input type="range" id="simScrub" min="0" max="30" step="0.05" value="0" aria-label="Simulation time">
+        <div class="seg seg-sm" role="radiogroup" aria-label="Playback speed">
+          <input type="radio" name="speed" id="sp1" value="1" checked><label for="sp1">1×</label>
+          <input type="radio" name="speed" id="sp2" value="2"><label for="sp2">2×</label>
+          <input type="radio" name="speed" id="sp4" value="4"><label for="sp4">4×</label>
+        </div>
+      </div>
+      <div class="note" id="simNote">Simulates a toss into still sea water with the lead and body chosen below. Change them to compare.</div>
+    </section>
+
+    <section id="curlSec" aria-labelledby="h-curl">
+      <div class="row"><h2 id="h-curl">Body curl</h2><span class="curl-read num" id="curlRead">230°</span></div>
+      <input type="range" id="curl" min="0" max="230" step="1" value="230" aria-labelledby="h-curl">
+      <div class="note" id="curlNote">Same curl as the printed file. The tail fork ends 74 mm from the snout.</div>
+    </section>
+
+    <section aria-labelledby="h-finish">
+      <h2 id="h-finish">Finish</h2>
+      <div class="seg" role="radiogroup" aria-labelledby="h-finish">
+        <input type="radio" name="finish" id="f-finished" value="finished" checked><label for="f-finished">Chrome + pattern</label>
+        <input type="radio" name="finish" id="f-raw" value="raw"><label for="f-raw">Raw print</label>
+      </div>
+      <div class="toggles">
+        <label class="chip" for="xray"><input type="checkbox" id="xray"> X-ray: line, lead, air &amp; balance</label>
+        <label class="chip" for="spin"><input type="checkbox" id="spin" checked> Turntable</label>
+        <button class="chip" type="button" id="reset">Reset view</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-ballast">
+      <div class="row"><h2 id="h-ballast">Ballast</h2><span class="note" id="ballastHint">tick to fill with tungsten putty</span></div>
+      <div class="chambers" id="chambers"></div>
+      <div class="readout">
+        <div><small>Dry weight</small><b id="rDry">–</b></div>
+        <div><small>Weight in sea</small><b id="rNet">–</b></div>
+        <div><small id="rTimeLbl">To 10 m</small><b id="rTime">–</b></div>
+      </div>
+      <div class="behaviour"><strong id="bTitle">–</strong><span id="bText"></span></div>
+      <div class="note" id="balanceNote"></div>
+      <div class="legend"><span><i style="background: #5d666c"></i>Lead</span><span><i style="background: #9fd3e6"></i>Sealed air</span><span><i style="background: #f2f6f8"></i>Line</span><span><i style="background: #ff7a3d; border-radius: 50%"></i>Centre of mass</span><span><i style="background: #3dd6ff; border-radius: 50%"></i>Centre of buoyancy</span></div>
+      <div class="note">Weights and fall come from the simulation: solid PLA at 1.22 g/cc with about 4 g of paint and epoxy. Turn on X-ray to see the line, lead, air and balance points. Test in a tub before you dive.</div>
+    </section>
+
+    <section aria-labelledby="h-print">
+      <h2 id="h-print">Print file</h2>
+      <dl class="specs" id="specs"></dl>
+    </section>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>/*FISH_DATA*/</script>
+<script>/*WOUNDED_DATA*/</script>
+<script>/*SCURVE_DATA*/</script>
+<script>/*SINK_DATA*/</script>
+<script>
+(function () {
+  "use strict";
+  const stage = document.getElementById("stage");
+  if (!window.THREE || !THREE.OrbitControls || !window.FISH) {
+    const d = document.createElement("div"); d.className = "err";
+    d.textContent = "The 3D viewer could not load. Reload the page to try again.";
+    stage.appendChild(d); return;
+  }
+  const D = window.FISH, FL = D.FL;
+  const X0 = D.bounds[0], Y0 = D.bounds[1], X1 = D.bounds[2], Y1 = D.bounds[3];
+
+  function dec(s, T) {
+    const b = atob(s), u = new Uint8Array(b.length);
+    for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+    return new T(u.buffer);
+  }
+  const IT = D.mesh.idx32 ? Uint32Array : Uint16Array;
+  const XY = dec(D.mesh.xy, Float32Array), ZT = dec(D.mesh.z, Float32Array);
+  const FA = dec(D.mesh.f, IT), BD = dec(D.mesh.b, IT);
+  const nv = D.mesh.nv;
+
+  // ------------------------------------------------------------ body (flat frame: x along fish, y up, z flank)
+  const wallMap = new Map();
+  for (let k = 0; k < BD.length; k++) if (!wallMap.has(BD[k])) wallMap.set(BD[k], wallMap.size);
+  const nw = wallMap.size, NV = 2 * nv + 2 * nw;
+  const bodyFlat = new Float32Array(NV * 3), bodyUV = new Float32Array(NV * 2);
+  function setV(i, x, y, z) {
+    bodyFlat[3 * i] = x; bodyFlat[3 * i + 1] = y; bodyFlat[3 * i + 2] = z;
+    bodyUV[2 * i] = (x - X0) / (X1 - X0); bodyUV[2 * i + 1] = (y - Y0) / (Y1 - Y0);
+  }
+  for (let i = 0; i < nv; i++) { setV(i, XY[2 * i], XY[2 * i + 1], ZT[i]); setV(nv + i, XY[2 * i], XY[2 * i + 1], -ZT[i]); }
+  wallMap.forEach((w, i) => { setV(2 * nv + w, XY[2 * i], XY[2 * i + 1], ZT[i]); setV(2 * nv + nw + w, XY[2 * i], XY[2 * i + 1], -ZT[i]); });
+  const idx = new Uint32Array(FA.length * 2 + BD.length * 3);
+  let p = 0;
+  for (let k = 0; k < FA.length; k += 3) { idx[p++] = FA[k]; idx[p++] = FA[k + 1]; idx[p++] = FA[k + 2]; }
+  for (let k = 0; k < FA.length; k += 3) { idx[p++] = nv + FA[k + 2]; idx[p++] = nv + FA[k + 1]; idx[p++] = nv + FA[k]; }
+  for (let k = 0; k < BD.length; k += 2) {
+    const Ti = 2 * nv + wallMap.get(BD[k]), Tj = 2 * nv + wallMap.get(BD[k + 1]), Bi = Ti + nw, Bj = Tj + nw;
+    idx[p++] = Tj; idx[p++] = Ti; idx[p++] = Bi; idx[p++] = Tj; idx[p++] = Bi; idx[p++] = Bj;
+  }
+
+  // ------------------------------------------------------------ bend (same law as build_curled.py)
+  const NS = 2400, BX0 = -12, BX1 = 1.14 * FL, dxB = (BX1 - BX0) / (NS - 1);
+  const ss = (a, b, v) => { const s = Math.min(Math.max((v - a) / (b - a), 0), 1); return s * s * (3 - 2 * s); };
+  const wB = new Float64Array(NS);
+  for (let i = 0; i < NS; i++) { const x = BX0 + i * dxB; wB[i] = ss(0.20 * FL, 0.38 * FL, x) * (1 - 0.65 * ss(0.86 * FL, 0.97 * FL, x)); }
+  let Wint = 0; for (let i = 1; i < NS; i++) Wint += (wB[i] + wB[i - 1]) / 2 * dxB;
+  const TH = new Float64Array(NS), CX = new Float64Array(NS), CZ = new Float64Array(NS);
+  const CAV = d => !!(D[d] && D[d].specs);
+  const THT = {};
+  ["wounded", "scurve"].forEach(d => { if (D[d]) THT[d] = dec(D[d].theta, Float32Array); });
+  function makeBend(deg, table) {
+    const k0 = deg * Math.PI / 180 / Wint;
+    TH[0] = table ? table[0] : 0; CX[0] = BX0; CZ[0] = 0;
+    for (let i = 1; i < NS; i++) {
+      TH[i] = table ? table[i] : TH[i - 1] - (wB[i] + wB[i - 1]) / 2 * dxB * k0;
+      const tm = (TH[i] + TH[i - 1]) / 2;
+      CX[i] = CX[i - 1] + Math.cos(tm) * dxB; CZ[i] = CZ[i - 1] + Math.sin(tm) * dxB;
+    }
+    const f = (0 - BX0) / dxB, i0 = Math.floor(f), t = f - i0;
+    const cx0 = CX[i0] * (1 - t) + CX[i0 + 1] * t, cz0 = CZ[i0] * (1 - t) + CZ[i0 + 1] * t;
+    for (let i = 0; i < NS; i++) { CX[i] -= cx0; CZ[i] -= cz0; }
+  }
+  function bendPoint(x, y, z, out, o) {
+    let f = (x - BX0) / dxB; f = Math.min(Math.max(f, 0), NS - 1.0001);
+    const i = Math.floor(f), t = f - i;
+    const th = TH[i] * (1 - t) + TH[i + 1] * t, cx = CX[i] * (1 - t) + CX[i + 1] * t, cz = CZ[i] * (1 - t) + CZ[i + 1] * t;
+    out[o] = cx - z * Math.sin(th); out[o + 1] = y; out[o + 2] = cz + z * Math.cos(th);
+  }
+  function bendArray(src, dst) { for (let i = 0; i < src.length; i += 3) bendPoint(src[i], src[i + 1], src[i + 2], dst, i); }
+
+  // ------------------------------------------------------------ renderer / scene
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  stage.insertBefore(renderer.domElement, stage.firstChild);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 1, 5000);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+  controls.autoRotateSpeed = 0.9; controls.minDistance = 40; controls.maxDistance = 1600;
+
+  // underwater environment: bright surface above, blue water around, dark below
+  (function makeEnv() {
+    const env = new THREE.Scene();
+    const g = new THREE.SphereGeometry(50, 64, 32);
+    const top = new THREE.Color(0xe6f7ff), mid = new THREE.Color(0x2c7798), bot = new THREE.Color(0x02101a);
+    const cols = [], pa = g.attributes.position;
+    for (let i = 0; i < pa.count; i++) {
+      const t = pa.getY(i) / 50, c = mid.clone();
+      if (t > 0) c.lerp(top, Math.pow(t, 0.9)); else c.lerp(bot, Math.min(1, -t * 2.0));
+      cols.push(c.r, c.g, c.b);
+    }
+    g.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+    env.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+    const sun = new THREE.Mesh(new THREE.CircleGeometry(9, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(7, 7, 6.4), side: THREE.DoubleSide }));
+    sun.position.set(6, 44, 10); sun.lookAt(0, 0, 0); env.add(sun);
+    [[0, 8, 42], [-42, 4, 0], [30, 2, -30]].forEach(([x, y, z]) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(46, 5), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.9, 2.3, 2.5), side: THREE.DoubleSide }));
+      m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
+    });
+    const pm = new THREE.PMREMGenerator(renderer);
+    scene.environment = pm.fromScene(env, 0.02).texture;
+    pm.dispose();
+  })();
+  const sunLight = new THREE.DirectionalLight(0xffffff, 0.9); sunLight.position.set(0.3, 1, 0.5); scene.add(sunLight);
+  scene.add(new THREE.HemisphereLight(0xbfe6ff, 0x041520, 0.35));
+
+  const loader = new THREE.TextureLoader();
+  const maxAniso = renderer.capabilities.getMaxAnisotropy();
+  function tex(src, srgb) {
+    const t = loader.load(src, () => { needsRender = true; });
+    if (srgb) t.encoding = THREE.sRGBEncoding;
+    t.anisotropy = maxAniso; return t;
+  }
+  const colourMap = tex(window.FISH_TEX, true);
+  const bumpStraight = tex(window.FISH_BUMP_S, false);
+  const bumpCurled = tex(window.FISH_BUMP_C, false);
+  const BUMP = 2.2;
+  const matFinished = new THREE.MeshStandardMaterial({ map: colourMap, bumpMap: bumpStraight, bumpScale: BUMP, metalness: 0.9, roughness: 0.2, envMapIntensity: 1.2 });
+  const matRaw = new THREE.MeshStandardMaterial({ color: 0xa3adb2, bumpMap: bumpStraight, bumpScale: BUMP, metalness: 0.08, roughness: 0.58, envMapIntensity: 0.9 });
+
+  const simRoot = new THREE.Group(); scene.add(simRoot);
+  const fish = new THREE.Group(); simRoot.add(fish);
+  const bodyGeo = new THREE.BufferGeometry();
+  bodyGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(NV * 3), 3));
+  bodyGeo.setAttribute("uv", new THREE.BufferAttribute(bodyUV, 2));
+  bodyGeo.setIndex(new THREE.BufferAttribute(idx, 1));
+  const body = new THREE.Mesh(bodyGeo, matFinished); fish.add(body);
+
+  // ------------------------------------------------------------ stick-on 3D eyes
+  const eyeParts = [];
+  (function makeEyes() {
+    const E = D.eye, R = E.d / 2, NR = E.nr, NSG = E.nseg;
+    [1, -1].forEach(side => {
+      const flat = [], col = [], ind = [];
+      for (let r = 0; r <= NR; r++) {
+        const rr = R * r / NR, h = 1.9 * Math.sqrt(Math.max(0, 1 - Math.pow(rr / R, 2))) + 0.12;
+        for (let s = 0; s < NSG; s++) {
+          const a = 2 * Math.PI * s / NSG;
+          const zb = E.base[r * NSG + s];
+          flat.push(E.x + rr * Math.cos(a), E.y + rr * Math.sin(a), side * (zb + h));
+          const q = rr / R;
+          let c;
+          if (q < 0.5) c = [0.015, 0.015, 0.02];
+          else if (q < 0.56) c = [0.18, 0.15, 0.08];
+          else if (q < 0.93) { const k = (q - 0.56) / 0.37; c = [0.92 - 0.25 * k, 0.83 - 0.25 * k, 0.55 - 0.2 * k]; }
+          else c = [0.35, 0.32, 0.22];
+          col.push(c[0], c[1], c[2]);
+        }
+      }
+      for (let r = 0; r < NR; r++) for (let s = 0; s < NSG; s++) {
+        const a = r * NSG + s, b = r * NSG + (s + 1) % NSG, c = (r + 1) * NSG + s, d = (r + 1) * NSG + (s + 1) % NSG;
+        if (side > 0) ind.push(a, c, b, b, c, d); else ind.push(a, b, c, b, d, c);
+      }
+      const g = new THREE.BufferGeometry();
+      const f = new Float32Array(flat);
+      g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(f.length), 3));
+      g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+      g.setIndex(ind);
+      const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.25, roughness: 0.08, envMapIntensity: 1.4 }));
+      fish.add(m); eyeParts.push({ geo: g, flat: f, mesh: m });
+    });
+  })();
+
+  // ------------------------------------------------------------ internals: chambers + wire
+  const matEpoxy = new THREE.MeshStandardMaterial({ color: 0xc8891a, metalness: 0.0, roughness: 0.4, emissive: 0x4a2c02 });
+  const matTung = new THREE.MeshStandardMaterial({ color: 0x8e9aa3, metalness: 0.85, roughness: 0.38 });
+  const matWire = new THREE.MeshStandardMaterial({ color: 0xe8eef2, metalness: 1.0, roughness: 0.18 });
+  const matLead = new THREE.MeshStandardMaterial({ color: 0x5d666c, metalness: 0.7, roughness: 0.45 });
+  const matHole = new THREE.MeshStandardMaterial({ color: 0x0b1a22, metalness: 0.0, roughness: 0.6, transparent: true, opacity: 0.75, depthWrite: false });
+  const matLine = new THREE.MeshStandardMaterial({ color: 0xf2f6f8, emissive: 0x6a7a80, metalness: 0.0, roughness: 0.3 });
+  const matCG = new THREE.MeshStandardMaterial({ color: 0xff7a3d, emissive: 0x7a2a08, roughness: 0.3, depthTest: false, transparent: true });
+  const matCB = new THREE.MeshStandardMaterial({ color: 0x3dd6ff, emissive: 0x0a4a5a, roughness: 0.3, depthTest: false, transparent: true });
+  function matFor(c) {
+    return c.kind === "air" ? matAir : c.kind === "lead" ? matLead : c.kind === "hole" ? matHole : c.kind === "line" ? matLine : matEpoxy;
+  }
+  const matAir = new THREE.MeshStandardMaterial({ color: 0x9fd3e6, metalness: 0.0, roughness: 0.15, transparent: true, opacity: 0.55, depthWrite: false });
+  const internals = new THREE.Group(); fish.add(internals);
+  let chamberParts = [];
+  function stadiumPrism(L, r, e0, e1) {
+    // stadium in (a,b), extruded e0..e1 ; returns non-indexed positions as [a,b,e] triples
+    const N = 20, ring = [], h = Math.max(0, L / 2 - r);
+    for (let i = 0; i <= N; i++) { const t = -Math.PI / 2 + Math.PI * i / N; ring.push([h + r * Math.cos(t), r * Math.sin(t)]); }
+    for (let i = 0; i <= N; i++) { const t = Math.PI / 2 + Math.PI * i / N; ring.push([-h + r * Math.cos(t), r * Math.sin(t)]); }
+    const out = [], M = ring.length;
+    for (let i = 0; i < M; i++) {
+      const [a0, b0] = ring[i], [a1, b1] = ring[(i + 1) % M];
+      out.push(0, 0, e1, a0, b0, e1, a1, b1, e1);
+      out.push(0, 0, e0, a1, b1, e0, a0, b0, e0);
+      out.push(a0, b0, e0, a1, b1, e0, a1, b1, e1, a0, b0, e0, a1, b1, e1, a0, b0, e1);
+    }
+    return out;
+  }
+  function buildChambers(design) {
+    chamberParts.forEach(c => { internals.remove(c.mesh); c.geo.dispose(); });
+    chamberParts = [];
+    const list = D[design].chambers;
+    list.forEach(c => {
+      let pts, center;
+      if (CAV(design)) {
+        const flat = dec(c.v, Float32Array), ind = dec(c.f, Uint16Array);
+        const g = new THREE.BufferGeometry();
+        g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(flat.length), 3));
+        g.setIndex(new THREE.BufferAttribute(new Uint32Array(ind), 1));
+        const m = new THREE.Mesh(g, matFor(c)); internals.add(m);
+        chamberParts.push({ name: c.name, kind: c.kind, label: c.label, geo: g, flat, mesh: m, center: c.centre });
+        return;
+      }
+      if (design === "straight") {
+        const raw = stadiumPrism(c.L, c.H / 2, -c.d, c.d);
+        pts = []; for (let i = 0; i < raw.length; i += 3) pts.push(c.x + raw[i], c.y + raw[i + 1], raw[i + 2]);
+        center = [c.x, c.y, 0];
+      } else {
+        const raw = stadiumPrism(c.L, c.width / 2, 0, c.depth);
+        pts = []; for (let i = 0; i < raw.length; i += 3) pts.push(c.x + raw[i], -raw[i + 2], raw[i + 1]);
+        center = [c.x, -c.depth / 2, 0];
+      }
+      const flat = new Float32Array(pts);
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(flat.length), 3));
+      const m = new THREE.Mesh(g, matEpoxy); internals.add(m);
+      chamberParts.push({ name: c.name, geo: g, flat, mesh: m, center });
+    });
+  }
+  let wireMesh = null;
+  const loops = [];
+  [-4.6, FL + 4.4].forEach(cx => {
+    const g = new THREE.TorusGeometry(3.4, 0.55, 10, 40);
+    const src = g.attributes.position.array, flat = new Float32Array(src.length);
+    for (let i = 0; i < src.length; i += 3) { flat[i] = src[i] + cx; flat[i + 1] = src[i + 1]; flat[i + 2] = src[i + 2]; }
+    const m = new THREE.Mesh(g, matWire); internals.add(m); loops.push({ geo: g, flat, mesh: m });
+  });
+  function rebuildWire() {
+    if (wireMesh) { internals.remove(wireMesh); wireMesh.geometry.dispose(); wireMesh = null; }
+    const noWire = CAV(state.design);                    // one-piece prints: no steel wire, line ties through the head
+    loops.forEach(l => { l.mesh.visible = !noWire; });
+    if (noWire) return;
+    const pts = [], tmp = [0, 0, 0];
+    for (let i = 0; i <= 160; i++) { const x = -1.2 + (FL + 2.2) * i / 160; bendPoint(x, 0, 0, tmp, 0); pts.push(new THREE.Vector3(tmp[0], tmp[1], tmp[2])); }
+    wireMesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 320, 0.55, 8, false), matWire);
+    internals.add(wireMesh);
+  }
+
+  // ------------------------------------------------------------ state + updates
+  const state = { design: "wounded", curl: 230, finish: "finished", xray: false,
+    fills: { straight: {}, curled: {}, scurve: {},
+      wounded: { LEAD: (D.wounded && D.wounded.defaultCharge) || 0 } } };
+  const NAMES = { wounded: "Head-down slow spiral · one-piece PLA", scurve: "S-curve · solid PLA", curled: "U-curl · solid PLA", straight: "Straight · solid PLA" };
+  let needsRender = true;
+
+  function applyGeometry() {
+    if (THT[state.design]) makeBend(0, THT[state.design]); else makeBend(state.design === "curled" ? state.curl : 0);
+    const pa = bodyGeo.attributes.position;
+    bendArray(bodyFlat, pa.array); pa.needsUpdate = true;
+    bodyGeo.computeVertexNormals(); bodyGeo.computeBoundingBox(); bodyGeo.computeBoundingSphere();
+    [...eyeParts, ...loops, ...chamberParts].forEach(part => {
+      const a = part.geo.attributes.position;
+      bendArray(part.flat, a.array); a.needsUpdate = true;
+      part.geo.computeVertexNormals(); part.geo.computeBoundingSphere();
+    });
+    rebuildWire();
+    if (sim.on && sim.run) fish.position.set(-sim.run.rg[0], -sim.run.rg[1], -sim.run.rg[2]);
+    else { const c = new THREE.Vector3(); bodyGeo.boundingBox.getCenter(c); fish.position.copy(c).negate(); }
+    needsRender = true;
+  }
+  function applyMaterials() {
+    const bump = state.design === "straight" ? bumpStraight : bumpCurled;
+    [matFinished, matRaw].forEach(m => {
+      m.bumpMap = bump; m.bumpScale = state.design === "straight" ? BUMP : 1.3;
+      m.transparent = state.xray; m.opacity = state.xray ? 0.2 : 1; m.depthWrite = !state.xray;
+      m.needsUpdate = true;
+    });
+    body.material = state.finish === "raw" ? matRaw : matFinished;
+    eyeParts.forEach(e => { e.mesh.visible = state.finish !== "raw" && !state.xray; });
+    internals.visible = state.xray;
+    chamberParts.forEach(c => { c.mesh.material = c.kind ? matFor(c) : (state.fills[state.design][c.name] ? matTung : matEpoxy); });
+    updateBalance();
+    needsRender = true;
+  }
+
+  function fitCamera() {
+    const box = new THREE.Box3().setFromObject(body), size = new THREE.Vector3();
+    box.getSize(size);
+    const r = size.length() / 2, aspect = camera.aspect || 1;
+    const vfov = camera.fov * Math.PI / 180, hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
+    const dist = r / Math.sin(Math.min(vfov, hfov) / 2) * (aspect < 1 ? 1.05 : 0.95);
+    const dir = (state.design === "curled" || state.design === "scurve") ? new THREE.Vector3(0.35, 0.95, 0.75) : new THREE.Vector3(-0.18, 0.22, 1);
+    dir.normalize();
+    camera.position.copy(dir.multiplyScalar(dist));
+    camera.near = dist / 50; camera.far = dist * 20; camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0); controls.update();
+    needsRender = true;
+  }
+
+  // ------------------------------------------------------------ panel
+  const DESC = {
+    scurve: { HEAD: "Head cavity, tungsten putty packed forward", GUT: "Gut cavity: tungsten (unticked = epoxy)", FLOAT_BACK: "Sealed air, back half", FLOAT_BELLY: "Sealed air, belly half" },
+    wounded: { HEAD: "Head cavity, tungsten putty packed forward", GUT: "Gut cavity: tungsten (unticked = epoxy)", FLOAT_BACK: "Sealed air, back half", FLOAT_BELLY: "Sealed air, belly half" },
+    straight: { A: "Forward", B: "Middle, at the centre of the side area", C: "Aft" },
+    curled: { HEAD: "Head", A: "Forward of the bend", B: "Into the bend", C: "Bottom of the U" }
+  };
+  const chambersEl = document.getElementById("chambers");
+  function renderChamberList() {
+    chambersEl.innerHTML = "";
+    el("ballastHint").textContent = (D[state.design].charges || []).length ? "pick the lead slug weight" : "one-piece solid PLA";
+    if (CAV(state.design)) { renderWoundedList(); return; }
+    D[state.design].chambers.forEach(c => {
+      const id = "ch-" + state.design + "-" + c.name;
+      const lab = document.createElement("label");
+      lab.className = "chamber" + (state.fills[state.design][c.name] ? " full" : "");
+      lab.htmlFor = id;
+      lab.innerHTML = '<input type="checkbox" id="' + id + '"' + (state.fills[state.design][c.name] ? " checked" : "") + '>' +
+        '<span class="tag">' + c.name + '</span><span class="desc">' + DESC[state.design][c.name] + '</span><span class="cc">' + c.cc.toFixed(2) + ' cc</span>';
+      lab.querySelector("input").addEventListener("change", e => {
+        state.fills[state.design][c.name] = e.target.checked;
+        lab.classList.toggle("full", e.target.checked);
+        updateReadout(); applyMaterials(); renderLabels();
+        if (sim.on) simStart();
+      });
+      chambersEl.appendChild(lab);
+    });
+  }
+  function chamberMass(c, fills) {
+    if (c.kind === "air") return 0;
+    const v = fills[c.name];
+    if (typeof v === "number") { const g = Math.min(v, c.cc * 10); return g + (c.cc - g / 10) * 1.15; }
+    return c.cc * (v ? 10.0 : 1.15);
+  }
+  function renderWoundedList() {
+    const f = state.fills[state.design], charges = D[state.design].charges;
+    let hasLead = false;
+    const order = { lead: 0, hole: 1, air: 2 };
+    D[state.design].chambers.slice().sort((p, q) => (order[p.kind] ?? 9) - (order[q.kind] ?? 9)).forEach(c => {
+      if (c.kind === "line") return;
+      const row = document.createElement("div");
+      if (c.kind === "lead") {
+        hasLead = true;
+        row.className = "chamber full";
+        row.innerHTML = '<span></span><span class="tag">LEAD</span><span class="desc">Lead slug in the bore between the eyes, sealed with epoxy under the 3D eyes</span><span class="cc">' + c.cc.toFixed(2) + ' cc</span>' +
+          '<div class="seg" role="radiogroup" aria-label="Lead slug weight">' + charges.map(g =>
+            '<input type="radio" name="hc" id="hc' + g + '" value="' + g + '"' + (g === f.LEAD ? " checked" : "") + '><label for="hc' + g + '">' + g + ' g</label>').join("") + '</div>';
+        row.querySelectorAll('input[name="hc"]').forEach(r => r.addEventListener("change", e => {
+          f.LEAD = +e.target.value;
+          updateReadout(); applyMaterials(); renderLabels(); if (sim.on) simStart();
+        }));
+      } else if (c.kind === "air") {
+        row.className = "chamber air";
+        row.innerHTML = '<span></span><span class="tag">AIR</span><span class="desc">Sealed air void, printed inside the piece</span><span class="cc">' + c.cc.toFixed(1) + ' cc</span>';
+      } else if (c.kind === "hole") {
+        row.className = "chamber air";
+        row.innerHTML = '<span></span><span class="tag" style="background: var(--fg); color: var(--abyss)">LINE</span><span class="desc">Line tie hole, 2.2 mm, top to bottom through the head (no wire)</span><span class="cc"></span>';
+      }
+      chambersEl.appendChild(row);
+    });
+    if (!hasLead) {
+      const row = document.createElement("div");
+      row.className = "chamber air";
+      row.innerHTML = '<span></span><span class="tag" style="background: var(--muted); color: var(--abyss)">PLA</span><span class="desc">Solid plastic: no lead, no air. The shape alone sets the fall.</span><span class="cc"></span>';
+      chambersEl.insertBefore(row, chambersEl.firstChild);
+    }
+  }
+  function weights() {
+    if (CAV(state.design) && getRun()) { const s = getRun().s; return { dry: s.dry_g, net: s.net_g }; }
+    const d = D[state.design], fills = state.fills[state.design];
+    let ballast = 0, vch = 0;
+    d.chambers.forEach(c => { vch += c.cc; ballast += chamberMass(c, fills); });
+    const dry = 1.27 * d.solid_cc * 0.97 + 6 + ballast;
+    const net = dry - 1.025 * (d.solid_cc + vch);
+    return { dry, net };
+  }
+  function behaviour() {
+    const f = state.fills[state.design], on = k => !!f[k];
+    if (CAV(state.design)) {
+      const r = getRun();
+      if (!r) return ["No simulation for this setup", "Try another head charge."];
+      const s = r.s;
+      if (s.net_g <= 0 || s.sink <= 0.02) return ["Floats or hangs", "Not enough weight to sink. Use more lead (or less paint)."];
+      let txt = "Simulated: " + simCaption(s) + ".";
+      const rb = SINK && SINK.robust && SINK.robust[state.design];
+      if (rb && rb.note && rb.key === runKey().split(":")[1]) txt += " Robustness check (12 runs, varied coefficients, PLA density, paint, toss): " + rb.success + " sink " + rb.sink[0].toFixed(2) + "–" + rb.sink[2].toFixed(2) + " m/s.";
+      else if (rb && rb.key === runKey().split(":")[1]) txt += " Robustness check: hits the target fall in " + rb.success + " runs with varied water-force coefficients, putty, coating and toss (sink " + rb.sink[0].toFixed(2) + "–" + rb.sink[2].toFixed(2) + " m/s).";
+      return [motionTitle(s), txt];
+    }
+    if (state.design === "straight") {
+      const n = ["A", "B", "C"].filter(on).length;
+      if (n === 0) return ["Slow, wandering fall", "Light enough to drift in current. Use it in still, clear water."];
+      if (n === 1 && on("B")) return ["Flat, fluttering fall", "Recommended starting point. It falls on its side and flashes as it rocks."];
+      if (n === 3) return ["Fast, steady drop", "Gets down quickly in current, with less flutter."];
+      if (on("A") && !on("C")) return ["Head-heavy", "In real water it may glide nose-down. The simulation shows it falling flat."];
+      if (on("C") && !on("A")) return ["Tail-heavy", "Tends to fall tail-first. Pool-test it before you use it."];
+      return ["Mixed balance", "Pool-test it and adjust."];
+    }
+    if (on("HEAD")) return ["U-down, head hanging lower", "The extra head weight tips the U so the snout sits lower. The simulation still shows a U-down fall."];
+    if (!on("A") && !on("B") && !on("C")) return ["Very slow, may not settle", "With no weight low in the bend it may not hold the U-down attitude."];
+    if (on("A") && on("B") && on("C")) return ["U-down, faster and steadier", "The belly stays lowest, and the head and tail point up."];
+    return ["U-down: belly lowest, head and tail up", "The weight sits at the bottom of the curve, like a stiff dead bait sinking."];
+  }
+  function updateReadout() {
+    const w = weights();
+    document.getElementById("rDry").textContent = Math.round(w.dry) + " g";
+    document.getElementById("rNet").textContent = Math.round(w.net) + " g";
+    const tl = document.getElementById("rTimeLbl"), tv = document.getElementById("rTime");
+    if (CAV(state.design) && getRun()) {
+      const s = getRun().s;
+      tl.textContent = "To 10 m"; tv.textContent = s.t10 ? "≈" + Math.round(s.t10) + " s" : "–";
+    } else if (state.design === "straight" && w.net > 0) {
+      const A = D.straight.side_area_mm2 * 1e-6;
+      const v = Math.sqrt(w.net / 1000 * 9.81 * 2 / (1025 * 1.2 * A));
+      tl.textContent = "To 10 m"; tv.textContent = "≈" + Math.round(10 / v) + " s";
+    } else { tl.textContent = "Ballast cc"; tv.textContent = D[state.design].chambers.reduce((s, c) => s + c.cc, 0).toFixed(1); }
+    const b = behaviour();
+    document.getElementById("bTitle").textContent = b[0];
+    document.getElementById("bText").textContent = b[1];
+  }
+  function renderSpecs() {
+    const W_ = D[state.design];
+    if (W_.specs) { document.getElementById("specs").innerHTML = W_.specs.map(r => "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>").join(""); return; }
+    const rows = CAV(state.design) ? [
+      ["Overall", W_.whole[0].toFixed(0) + " × " + W_.whole[2].toFixed(0) + " × " + W_.whole[1].toFixed(0) + " mm"],
+      ["Shape", state.design === "scurve" ? "S-curve, two opposing lobes (95° and 120°)" : W_.bend_deg + "° body bend, " + W_.kick_deg + "° tail kick"],
+      ["Back half", W_.halves.back.join(" × ") + " mm"],
+      ["Belly half", W_.halves.belly.join(" × ") + " mm"],
+      ["Cavities", "head 9.0 cc + gut 6.7 cc ballast, 21.7 cc sealed air"],
+      ["Pattern", "0.4 mm engraved lines, airbrush + wash"],
+      ["Files", state.design + "_mackerel_BACK/BELLY_half.stl"]
+    ] : state.design === "straight" ? [
+      ["Overall", "250 × 61 mm"],
+      ["Halves", "2 × 249.5 × 61.3 × 10 mm"],
+      ["Split", "Left and right flank, flat face down"],
+      ["Pattern", "Waterslide decal over chrome"],
+      ["Files", "mackerel_flasher_LEFT/RIGHT_half.stl"]
+    ] : [
+      ["Footprint", "114 × 94 mm at 230°"],
+      ["Back half", D.curled.halves.dorsal.join(" × ") + " mm"],
+      ["Belly half", D.curled.halves.ventral.join(" × ") + " mm"],
+      ["Split", "Along the lateral line, flat face down"],
+      ["Pattern", "0.4 mm engraved lines, airbrush + wash"],
+      ["Files", "curled_mackerel_DORSAL/VENTRAL_half.stl"]
+    ];
+    document.getElementById("specs").innerHTML = rows.map(r => "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>").join("");
+  }
+
+  // labels for chambers in x-ray
+  const labelsEl = document.getElementById("labels");
+  let labelEls = [];
+  function renderLabels() {
+    labelsEl.innerHTML = ""; labelEls = [];
+    if (!state.xray) return;
+    const seen = {};
+    chamberParts.forEach(c => {
+      if (c.kind === "air" && seen.air) return;
+      if (c.kind) seen[c.kind] = true;
+      const s = document.createElement("span");
+      const fv = state.fills[state.design][c.name];
+      if (c.kind === "lead") { s.textContent = "Lead · " + state.fills[state.design].LEAD + " g"; s.className = "full"; }
+      else if (c.kind) s.textContent = c.label || c.name;
+      if (c.kind) c.dy = { lead: 22, hole: -22, line: -6, air: 0 }[c.kind] || 0;
+      else { s.textContent = c.name + (typeof fv === "number" ? (fv > 0 ? " · " + fv + " g W" : "") : (fv ? " · W" : "")); if (fv) s.className = "full"; }
+      labelsEl.appendChild(s); labelEls.push({ el: s, c });
+    });
+    [[cgMesh, "Centre of mass", "#ff7a3d"], [cbMesh, "Centre of buoyancy", "#3dd6ff"]].forEach(([m, t, col]) => {
+      if (!m.visible) return;
+      const s = document.createElement("span");
+      s.textContent = t; s.style.borderColor = col; s.style.color = col;
+      labelsEl.appendChild(s); labelEls.push({ el: s, c: { center: [m.position.x, m.position.y, m.position.z], noBend: true, dy: t.includes("mass") ? 16 : -16 } });
+    });
+  }
+  const tmpV = new THREE.Vector3(), tmpA = [0, 0, 0];
+  function placeLabels() {
+    if (!labelEls.length) return;
+    const w = stage.clientWidth, h = stage.clientHeight;
+    labelEls.forEach(({ el, c }) => {
+      if (c.noBend) { tmpA[0] = c.center[0]; tmpA[1] = c.center[1]; tmpA[2] = c.center[2]; }
+      else bendPoint(c.center[0], c.center[1], c.center[2], tmpA, 0);
+      fish.localToWorld(tmpV.set(tmpA[0], tmpA[1], tmpA[2])).project(camera);
+      el.style.left = ((tmpV.x + 1) / 2 * w) + "px";
+      el.style.top = ((1 - tmpV.y) / 2 * h - 16 + (c.dy || 0) * 1.4) + "px";
+      el.hidden = tmpV.z > 1;
+    });
+  }
+
+  // balance markers: centre of mass (orange) and centre of buoyancy (cyan), from the simulation's mass model
+  const cgMesh = new THREE.Mesh(new THREE.SphereGeometry(2.6, 20, 14), matCG); cgMesh.renderOrder = 10;
+  const cbMesh = new THREE.Mesh(new THREE.SphereGeometry(2.6, 20, 14), matCB); cbMesh.renderOrder = 10;
+  internals.add(cgMesh); internals.add(cbMesh);
+  function updateBalance() {
+    const r = typeof getRun === "function" ? getRun() : null;
+    const note = document.getElementById("balanceNote");
+    if (!r || !r.s.cb_mm) { cgMesh.visible = cbMesh.visible = false; if (note) note.textContent = ""; return; }
+    const g = r.s.rg_mm, b = r.s.cb_mm;
+    cgMesh.position.set(g[0], g[1], g[2]); cbMesh.position.set(b[0], b[1], b[2]);
+    cgMesh.visible = cbMesh.visible = true;
+    const dist = Math.hypot(g[0] - b[0], g[1] - b[1], g[2] - b[2]);
+    if (note) note.textContent = dist < 0.5
+      ? "Balance: centre of mass and centre of buoyancy coincide (solid plastic), so the shape alone sets the attitude."
+      : "Balance: centre of mass sits " + dist.toFixed(0) + " mm " + (g[0] < b[0] ? "toward the head from" : "behind") + " the centre of buoyancy, so the head hangs down.";
+  }
+
+  function setDesign(d) {
+    state.design = d;
+    document.getElementById("curlSec").hidden = d !== "curled";
+    document.getElementById("badgeText").textContent = NAMES[d];
+    buildChambers(d);
+    applyGeometry(); applyMaterials(); renderChamberList(); updateReadout(); renderSpecs(); renderLabels();
+    if (sim.on) simStart(); else fitCamera();
+  }
+
+  document.querySelectorAll('input[name="design"]').forEach(r => r.addEventListener("change", e => setDesign(e.target.value)));
+  document.querySelectorAll('input[name="finish"]').forEach(r => r.addEventListener("change", e => { state.finish = e.target.value; applyMaterials(); }));
+  const curlEl = document.getElementById("curl");
+  curlEl.addEventListener("input", () => {
+    state.curl = +curlEl.value;
+    document.getElementById("curlRead").textContent = state.curl + "°";
+    const note = document.getElementById("curlNote");
+    if (state.curl === D.curled.curl_deg) { note.textContent = "Same curl as the printed file. The tail fork ends 74 mm from the snout."; note.classList.remove("warn"); }
+    else { note.textContent = "Preview only. The printed file is curled to 230°. Change CURL_DEG in build_curled.py to print this curl."; note.classList.add("warn"); }
+    applyGeometry();
+  });
+  document.getElementById("xray").addEventListener("change", e => { state.xray = e.target.checked; applyMaterials(); renderLabels(); });
+  const spin = document.getElementById("spin");
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) spin.checked = false;
+  controls.autoRotate = spin.checked;
+  spin.addEventListener("change", () => { controls.autoRotate = spin.checked; });
+  document.getElementById("reset").addEventListener("click", () => { userMoved = false; if (sim.on) simCamera(); else fitCamera(); });
+
+
+  // ------------------------------------------------------------ sink test (precomputed 6-DOF simulation)
+  const SINK = window.SINK || null;
+  const sim = { on: false, playing: false, t: 0, dur: 0, speed: 1, run: null };
+  const runCache = {};
+  function runKey() {
+    const f = state.fills[state.design];
+    const parts = Object.keys(f).filter(k => f[k]).map(k => typeof f[k] === "number" ? k + "@" + f[k] : k).sort();
+    return state.design + ":" + parts.join("+");
+  }
+  function getRun() {
+    const k = runKey();
+    if (!SINK || !SINK.runs[k]) return null;
+    if (!runCache[k]) { const r = SINK.runs[k]; runCache[k] = { key: k, n: r.n, rg: r.rg, s: r.summary, a: dec(r.b64, Float32Array) }; }
+    return runCache[k];
+  }
+  const water = new THREE.Group(); water.visible = false; scene.add(water);
+
+  // ---- the wahoo (funny branch): a ~1.5 m procedural Acanthocybium, attracted by the flash
+  const wahoo = new THREE.Group(); wahoo.visible = false; scene.add(wahoo);
+  const WL = 1200;                                       // mm
+  (function buildWahoo() {
+    const segs = 40, rings = 18, V = [], N = [], UV = [], F = [];
+    const prof = u => {                                  // half-height / half-width along the body
+      const h = 0.085 * Math.sin(Math.PI * Math.pow(u, 0.8)) + 0.012 * (1 - u);
+      return [h * WL, 0.55 * h * WL];
+    };
+    for (let i = 0; i <= segs; i++) {
+      const u = i / segs, [a, b] = prof(u);
+      for (let j = 0; j <= rings; j++) {
+        const th = j / rings * 2 * Math.PI, cy = Math.cos(th), sz = Math.sin(th);
+        V.push(u * WL, a * cy, b * sz); N.push(0, cy / a, sz / b); UV.push(u, j / rings);
+      }
+    }
+    for (let i = 0; i < segs; i++) for (let j = 0; j < rings; j++) {
+      const p = i * (rings + 1) + j, q = p + rings + 1;
+      F.push(p, p + 1, q, p + 1, q + 1, q);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(V, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(UV, 2));
+    g.setIndex(F); g.computeVertexNormals();
+    // vertical bars: dark steel-blue back fading to silver belly, 25 wavy bars
+    const cv = document.createElement("canvas"); cv.width = 1024; cv.height = 256;
+    const cx = cv.getContext("2d");
+    const grd = cx.createLinearGradient(0, 0, 0, 256);
+    grd.addColorStop(0, "#1b3a52"); grd.addColorStop(0.28, "#1b3a52"); grd.addColorStop(0.5, "#7f98a8");
+    grd.addColorStop(0.75, "#d9e3ea"); grd.addColorStop(1, "#1b3a52");
+    cx.fillStyle = grd; cx.fillRect(0, 0, 1024, 256);
+    cx.strokeStyle = "rgba(20,45,70,.75)"; cx.lineWidth = 7;
+    for (let k = 0; k < 26; k++) {
+      const x = 160 + k * 31;
+      cx.beginPath();
+      for (let y = 0; y <= 256; y += 8) cx.lineTo(x + 6 * Math.sin(y / 22 + k), y);
+      cx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.wrapT = THREE.RepeatWrapping;
+    const body = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: tex, metalness: 0.55, roughness: 0.3, envMapIntensity: 1.1 }));
+    body.rotation.z = 0; wahoo.add(body);
+    const finMat = new THREE.MeshStandardMaterial({ color: 0x1d3f5a, metalness: 0.3, roughness: 0.5, side: THREE.DoubleSide });
+    // tail (lunate), dorsal (long low first dorsal), pectorals
+    const tri = (pts) => { const sh = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], p[1]))); return new THREE.ShapeGeometry(sh); };
+    const tailM = new THREE.Mesh(tri([[0, 0], [100, 190], [20, 0], [100, -190]]), finMat); tailM.position.x = WL - 10; wahoo.add(tailM);
+    const dors = new THREE.Mesh(tri([[0, 0], [40, 95], [330, 70], [540, 30], [560, 0]]), finMat); dors.position.set(0.28 * WL, 0.075 * WL, 0); wahoo.add(dors);
+    const dors2 = new THREE.Mesh(tri([[0, 0], [30, 70], [90, 0]]), finMat); dors2.position.set(0.70 * WL, 0.05 * WL, 0); wahoo.add(dors2);
+    const anal = new THREE.Mesh(tri([[0, 0], [30, -65], [90, 0]]), finMat); anal.position.set(0.72 * WL, -0.045 * WL, 0); wahoo.add(anal);
+    [1, -1].forEach(sgn => {
+      const pec = new THREE.Mesh(tri([[0, 0], [150, -30], [60, -110]]), finMat);
+      pec.position.set(0.3 * WL, -0.01 * WL, sgn * 0.05 * WL); pec.rotation.x = sgn * 0.9; wahoo.add(pec);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(12, 16, 12), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 }));
+      eye.position.set(0.09 * WL, 0.02 * WL, sgn * 0.052 * WL * 0.9); wahoo.add(eye);
+    });
+    // jaw line
+    const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.11 * WL, 2, 0.08 * WL), new THREE.MeshStandardMaterial({ color: 0x0e2230 }));
+    jaw.position.set(0.055 * WL, -0.012 * WL, 0); wahoo.add(jaw);
+  })();
+  // wahoo script, in seconds relative to the flasher reaching 5 m (pass) and 8 m (strike)
+  const WAHOO = { seen: false, struck: false, tPass: 0, tStrike: 0 };
+  const wTmp = new THREE.Vector3(), wTmp2 = new THREE.Vector3();
+  function flasherAt(t) { simPose(t); return simRoot.position.clone(); }
+  function timeAtDepth(d) {
+    const r = sim.run; let lo = 0, hi = sim.dur;
+    if (depthAt(hi) < d) return null;
+    for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; (depthAt(m) < d ? (lo = m) : (hi = m)); }
+    return (lo + hi) / 2;
+  }
+  // camera-relative frame: R = screen right, U = up, B = away from the camera (behind the flasher)
+  function camFrame() {
+    const B = new THREE.Vector3().subVectors(controls.target, camera.position); B.y = 0; B.normalize();
+    const R = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), B).normalize();
+    return { R, B, U: new THREE.Vector3(0, 1, 0) };
+  }
+  function wahooUpdate(t) {
+    if (!sim.on || state.design !== "wounded" || WAHOO.tPass === null) { wahoo.visible = false; fish.visible = true; return; }
+    const tp = WAHOO.tPass, ts = WAHOO.tStrike, { R, B, U } = camFrame();
+    const at = (base, r, u, b) => base.clone().addScaledVector(R, r).addScaledVector(U, u).addScaledVector(B, b);
+    let pos, dir, swim = 1;
+    if (t < tp - 6 || t > ts + 2.5) { wahoo.visible = false; fish.visible = true; return; }
+    if (t < tp + 3) {                                   // pass: screen-left -> right, 2.6 m behind, level with the flasher
+      const u = (t - (tp - 6)) / 9;
+      pos = at(WAHOO.p5, -4500 + 9000 * u, 250 + 120 * Math.sin(u * 6), 2600);
+      dir = R.clone().addScaledVector(U, 0.02 * Math.cos(u * 6)).normalize();
+    } else if (t < ts - 1.6) {                          // circle back on the far side, descending toward 8 m
+      const u = (t - (tp + 3)) / ((ts - 1.6) - (tp + 3));
+      const ang = u * Math.PI;                          // half circle: right side -> far side -> left side
+      const rad = 3200 - 600 * u;
+      const ctr = at(WAHOO.p8, 0, 900 - 900 * u + (WAHOO.p5.y - WAHOO.p8.y) * (1 - u), 1800);
+      pos = ctr.clone().addScaledVector(R, rad * Math.cos(ang)).addScaledVector(B, rad * Math.sin(ang) * 0.6);
+      const nxt = ctr.clone().addScaledVector(R, rad * Math.cos(ang + 0.06)).addScaledVector(B, rad * Math.sin(ang + 0.06) * 0.6);
+      dir = nxt.sub(pos).normalize(); swim = 1.3;
+    } else if (t < ts) {                                // strike: from screen-left, slightly behind, straight at the flasher
+      const u = (t - (ts - 1.6)) / 1.6, e = u * u;
+      const start = at(WAHOO.p8, -3400, 300, 700);
+      pos = start.clone().lerp(WAHOO.p8, e);
+      dir = WAHOO.p8.clone().sub(start).normalize(); swim = 2.5;
+      WAHOO.strikeDir = dir;
+    } else {                                            // follow-through: carries it off to screen-right, fading
+      const u = (t - ts) / 2.5;
+      pos = WAHOO.p8.clone().addScaledVector(WAHOO.strikeDir, 6000 * u);
+      dir = WAHOO.strikeDir; swim = 2.5;
+      wahoo.children.forEach(m => { if (m.material) { m.material.transparent = true; m.material.opacity = 1 - u; } });
+    }
+    wahoo.visible = true;
+    wahoo.position.copy(pos).addScaledVector(dir, -0.5 * WL);
+    wahoo.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
+    const beat = Math.sin(t * 7 * swim) * 0.06 * swim;
+    wahoo.children.forEach((m, i) => { if (i === 0) m.rotation.y = beat * 0.3; else if (m.position.x > 0.6 * WL) m.rotation.y = beat; });
+    fish.visible = t < ts;
+  }
+  function wahooPlan() {
+    WAHOO.tPass = null; WAHOO.struck = false;
+    wahoo.children.forEach(m => { if (m.material) { m.material.transparent = false; m.material.opacity = 1; } });
+    if (state.design !== "wounded") return;
+    const t5 = timeAtDepth(5), t8 = timeAtDepth(8);
+    if (t5 === null || t8 === null) return;
+    WAHOO.tPass = t5; WAHOO.tStrike = t8;
+    WAHOO.p5 = flasherAt(t5); WAHOO.p8 = flasherAt(t8);
+    WAHOO.strikeDir = new THREE.Vector3(1, 0, 0);
+    sim.dur = Math.min(sim.dur, t8 + 2.5);
+  }
+  const fogSim = new THREE.Fog(0x0b3144, 650, 5200);
+  (function buildWater() {
+    const ROPE_X = -520, ROPE_Z = -760;
+    const rope = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 11600, 8), new THREE.MeshStandardMaterial({ color: 0xcfc4a2, roughness: 0.9 }));
+    rope.position.set(ROPE_X, -5800, ROPE_Z); water.add(rope);
+    const bandMat = new THREE.MeshStandardMaterial({ color: 0xd9bf68, roughness: 0.5, metalness: 0.2 });
+    for (let m = 1; m <= 11; m++) {
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 46, 16), bandMat);
+      band.position.set(ROPE_X, -m * 1000, ROPE_Z); water.add(band);
+      const cv = document.createElement("canvas"); cv.width = 256; cv.height = 128;
+      const g = cv.getContext("2d");
+      g.fillStyle = "rgba(6,20,29,.75)"; g.fillRect(8, 24, 200, 80);
+      g.fillStyle = "#e9dca8"; g.font = "600 60px 'IBM Plex Mono', monospace"; g.textBaseline = "middle";
+      g.fillText(m + " m", 24, 66);
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false }));
+      sp.scale.set(150, 75, 1); sp.position.set(ROPE_X + 95, -m * 1000, ROPE_Z); water.add(sp);
+    }
+    const surf = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.MeshBasicMaterial({ color: 0xbfeaf7, transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false }));
+    surf.rotation.x = -Math.PI / 2; water.add(surf);
+    const N = 6000, P = new Float32Array(N * 3);
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < N; i++) { P[3 * i] = (rnd() - 0.5) * 5000; P[3 * i + 1] = 400 - rnd() * 12400; P[3 * i + 2] = (rnd() - 0.5) * 5000; }
+    const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(P, 3));
+    water.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xd3eaf0, size: 3.4, sizeAttenuation: true, transparent: true, opacity: 0.7, depthWrite: false })));
+  })();
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(3 * 1200), 3));
+  const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0xd9bf68, transparent: true, opacity: 0.3 }));
+  trail.frustumCulled = false; water.add(trail);
+
+  const gaugeEl = document.getElementById("gauge");
+  gaugeEl.innerHTML = Array.from({ length: 11 }, (_, m) => '<span style="top:' + (m * 10) + '%">' + m + ' m</span>').join("") + '<i id="gMark" style="top:0%"></i>';
+  const gMark = document.getElementById("gMark");
+  const el = id => document.getElementById(id);
+  const qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
+  function frameAt(t) {
+    const r = sim.run, f = Math.min(Math.max(t * SINK.hz, 0), r.n - 1), i = Math.min(Math.floor(f), r.n - 2);
+    return [i, f - i];
+  }
+  function depthAt(t) {
+    const [i, u] = frameAt(t), a = sim.run.a;
+    return -(a[i * 7 + 1] * (1 - u) + a[(i + 1) * 7 + 1] * u);
+  }
+  function simPose(t) {
+    const [i, u] = frameAt(t), a = sim.run.a, o = i * 7, o2 = o + 7;
+    simRoot.position.set((a[o] * (1 - u) + a[o2] * u) * 1000, (a[o + 1] * (1 - u) + a[o2 + 1] * u) * 1000, (a[o + 2] * (1 - u) + a[o2 + 2] * u) * 1000);
+    qa.set(a[o + 4], a[o + 5], a[o + 6], a[o + 3]); qb.set(a[o2 + 4], a[o2 + 5], a[o2 + 6], a[o2 + 3]);
+    qa.slerp(qb, u); simRoot.quaternion.copy(qa);
+  }
+  const followD = new THREE.Vector3();
+  function follow() {
+    if (WAHOO.tPass !== null && sim.t >= WAHOO.tStrike) return;     // hold the camera at the strike point
+    followD.subVectors(simRoot.position, controls.target);
+    camera.position.add(followD); controls.target.copy(simRoot.position);
+  }
+  function simCamera() {
+    controls.target.copy(simRoot.position);
+    // look square-on to the settled attitude: from the dorsal side for the curl, from above-side for the straight body
+    const r = sim.run, o = (r.n - 1) * 7;
+    const qf = new THREE.Quaternion(r.a[o + 4], r.a[o + 5], r.a[o + 6], r.a[o + 3]);
+    const curled = state.design === "curled" || state.design === "scurve";
+    let off;
+    if (curled) {
+      const dorsal = new THREE.Vector3(0, 1, 0).applyQuaternion(qf); dorsal.y = 0;
+      if (dorsal.lengthSq() < 1e-4) dorsal.set(0, 0, 1);
+      off = dorsal.normalize().multiplyScalar(state.design === "scurve" ? 640 : 540).add(new THREE.Vector3(0, 120, 0));
+    } else {
+      const fz = new THREE.Vector3(0, 0, 1).applyQuaternion(qf);
+      if (state.design === "wounded") {
+        off = new THREE.Vector3(0, 120, 3800);   // fixed level side view (wide for the wahoo): the spiral turns the fish past the camera; the depth rope stays behind
+      } else {
+        if (fz.y < 0) fz.negate();
+        fz.y += 0.3;
+        off = fz.normalize().multiplyScalar(520);
+      }
+    }
+    camera.position.copy(simRoot.position).add(off);
+    camera.near = 5; camera.far = 20000; camera.updateProjectionMatrix(); controls.update(); needsRender = true;
+  }
+  function motionTitle(s) {
+    const hd = s.head_down, osc = Math.max(s.roll_osc, s.head_down_osc);
+    let a = hd > 12 ? "Head-down" : hd < -12 ? (state.design === "curled" ? "U-down" : "Snout-up") : "Level";
+    let m = Math.abs(s.yaw_rate) > 240 ? " spin" : (Math.abs(s.yaw_rate) > 20 && osc <= 6) ? " spiral" : s.sway_m > 0.8 ? " glide" : (osc > 6 || Math.abs(s.yaw_rate) > 20) ? " flutter and spiral" : " steady sink";
+    if (a === "Level" && m === " glide") return "Gliding fall";
+    return a + m;
+  }
+  function simCaption(s) {
+    const hd = s.head_down, parts = [];
+    if (hd > 12) parts.push("head down about " + Math.round(hd) + "°");
+    else if (hd < -12) parts.push("snout up about " + Math.round(-hd) + "°");
+    else parts.push("body about level");
+    const osc = Math.max(s.roll_osc, s.head_down_osc);
+    if (osc > 6) parts.push("rocking about ±" + Math.round(osc * 1.4) + "°");
+    const yr = Math.abs(s.yaw_rate);
+    if (yr > 240) parts.push("spinning " + (yr / 360).toFixed(1) + " turns/s");
+    else if (yr > 20) parts.push("turning one circle every " + Math.round(360 / yr) + " s");
+    if (s.sway_m > 0.8) parts.push("gliding up to " + s.sway_m.toFixed(1) + " m sideways");
+    else if (s.sway_m > 0.08) parts.push("spiralling within " + Math.round(s.sway_m * 100) + " cm");
+    parts.push(s.t10 ? "10 m in " + Math.round(s.t10) + " s" : "under 10 m in 40 s");
+    return parts.join(", ");
+  }
+  function simCaptionV1(s) {
+    const parts = [];
+    if (state.design === "curled") {
+      if (s.flank_down_tilt_deg < 65) parts.push("Rights itself and sinks U-down, snout about " + Math.max(0, Math.round(-s.head_pitch_deg)) + "° up");
+      else parts.push("Does not hold the U-down attitude");
+    } else {
+      const flat = s.flank_down_tilt_deg < 30 || s.flank_down_tilt_deg > 150;
+      if (flat && Math.abs(s.head_pitch_deg) < 20) parts.push("Settles flat on its side");
+      else if (s.head_pitch_deg < -25) parts.push("Settles nose-up");
+      else if (s.head_pitch_deg > 25) parts.push("Settles nose-down");
+      else parts.push("Settles tilted");
+    }
+    parts.push(s.t10 ? "10 m in " + s.t10 + " s" : depthAt(sim.dur).toFixed(1) + " m after " + Math.round(sim.dur) + " s");
+    return parts.join(" · ");
+  }
+  function simUpdate() {
+    simPose(sim.t); follow();
+    const d = depthAt(sim.t), t0 = Math.max(0, sim.t - 0.25), t1 = Math.min(sim.dur, sim.t + 0.25);
+    const rate = t1 > t0 ? (depthAt(t1) - depthAt(t0)) / (t1 - t0) : 0;
+    el("hDepth").textContent = Math.max(0, d).toFixed(2) + " m";
+    el("hTime").textContent = sim.t.toFixed(1) + " s";
+    el("hRate").textContent = rate.toFixed(2) + " m/s";
+    gMark.style.top = Math.min(100, Math.max(0, d * 10)) + "%";
+    el("shade").style.opacity = (Math.min(1, Math.max(0, d) / 10) * 0.4).toFixed(3);
+    trailGeo.setDrawRange(0, Math.min(sim.run.n, Math.floor(sim.t * SINK.hz) + 1));
+    wahooUpdate(sim.t);
+    if (WAHOO.tPass !== null) {
+      const cap = el("hCap");
+      if (sim.t >= WAHOO.tStrike) cap.textContent = "8 m: WAHOO! It hit the flasher. Shoot now.";
+      else if (sim.t >= WAHOO.tStrike - 1.6) cap.textContent = "Here it comes...";
+      else if (sim.t >= WAHOO.tPass + 3) cap.textContent = "It's circling back. Stay still, keep the flasher sinking.";
+      else if (sim.t >= WAHOO.tPass - 6) cap.textContent = "5 m: a wahoo cruises past and clocks the flash.";
+      else cap.textContent = WAHOO.cap0;
+    }
+    const sc = el("simScrub"); if (document.activeElement !== sc) sc.value = sim.t.toFixed(2);
+    needsRender = true;
+  }
+  function simButtons() {
+    const b = el("simPlay");
+    if (!sim.on) b.textContent = "Drop it in the water";
+    else if (sim.playing) b.textContent = "Pause";
+    else if (sim.t >= sim.dur - 1e-6) b.textContent = "Replay";
+    else b.textContent = "Resume";
+    el("simExit").hidden = !sim.on; el("simCtl").hidden = !sim.on;
+    el("hud").hidden = !sim.on; el("gauge").hidden = !sim.on; el("simBadge").hidden = !sim.on;
+    curlEl.disabled = sim.on;
+  }
+  function simStart() {
+    const run = getRun();
+    if (!run) { el("simNote").textContent = "No simulation for this ballast combination."; return false; }
+    if (state.design === "curled" && state.curl !== D.curled.curl_deg) {
+      curlEl.value = D.curled.curl_deg; curlEl.dispatchEvent(new Event("input"));
+    }
+    sim.on = true; sim.run = run; sim.t = 0; sim.dur = (run.n - 1) / SINK.hz; sim.playing = true;
+    applyGeometry();
+    water.visible = true; scene.fog = fogSim;
+    spin.checked = false; controls.autoRotate = false;
+    const tp = trailGeo.attributes.position.array, a = run.a, n = Math.min(run.n, 1200);
+    for (let i = 0; i < n; i++) { tp[3 * i] = a[i * 7] * 1000; tp[3 * i + 1] = a[i * 7 + 1] * 1000; tp[3 * i + 2] = a[i * 7 + 2] * 1000; }
+    trailGeo.attributes.position.needsUpdate = true; trailGeo.computeBoundingSphere();
+    el("simScrub").max = sim.dur.toFixed(2);
+    const ff = state.fills[state.design];
+    el("simBadge").textContent = "Simulated · " + (ff.LEAD ? "PLA, " + ff.LEAD + " g lead between the eyes" : "solid PLA, no ballast");
+    el("hCap").textContent = motionTitle(run.s) + ": " + simCaption(run.s);
+    WAHOO.cap0 = el("hCap").textContent;
+    wahooPlan(); el("simScrub").max = sim.dur.toFixed(2);
+    el("simNote").textContent = "Strip-model physics calibrated on falling-plate experiments: buoyancy, cross-flow drag and lift on each body slice, added mass, tail-fin lift. Compare setups here, then pool-test.";
+    simPose(0); simCamera(); simUpdate(); simButtons();
+    return true;
+  }
+  function simExit() {
+    sim.on = false; sim.playing = false; water.visible = false; scene.fog = null; wahoo.visible = false; fish.visible = true;
+    simRoot.position.set(0, 0, 0); simRoot.quaternion.identity();
+    el("shade").style.opacity = 0;
+    applyGeometry(); fitCamera(); simButtons();
+    el("simNote").textContent = "Simulates a toss into still sea water with the lead and body chosen below. Change them to compare.";
+  }
+  el("simPlay").addEventListener("click", () => {
+    if (!sim.on) { simStart(); return; }
+    if (sim.t >= sim.dur - 1e-6) { sim.t = 0; sim.playing = true; }
+    else sim.playing = !sim.playing;
+    simButtons();
+  });
+  el("simExit").addEventListener("click", simExit);
+  el("simScrub").addEventListener("input", e => { if (!sim.on) return; sim.t = +e.target.value; sim.playing = false; simUpdate(); simButtons(); });
+  document.querySelectorAll('input[name="speed"]').forEach(r => r.addEventListener("change", e => { sim.speed = +e.target.value; }));
+  if (!SINK) { el("simPlay").disabled = true; el("simNote").textContent = "Simulation data did not load."; }
+  window.__sink = {
+    start(design, fills) {
+      if (design && design !== state.design) { el("d-" + design).checked = true; setDesign(design); }
+      if (fills) {
+        if (Array.isArray(fills)) { state.fills[state.design] = {}; fills.forEach(k => state.fills[state.design][k] = true); }
+        else state.fills[state.design] = Object.assign({}, fills);
+        renderChamberList(); updateReadout(); applyMaterials();
+      }
+      simStart(); sim.playing = false; simButtons(); return sim.dur;
+    },
+    seek(t) { sim.t = t; simUpdate(); controls.update(); renderer.render(scene, camera); placeLabels(); }
+  };
+
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix(); needsRender = true;
+    if (!userMoved && booted && !sim.on) fitCamera();
+  }
+  let userMoved = false, booted = false;
+  controls.addEventListener("start", () => { userMoved = true; });
+  new ResizeObserver(resize).observe(stage);
+  resize();
+  setDesign(D.wounded ? "wounded" : "curled");
+  booted = true;
+
+  controls.addEventListener("change", () => { needsRender = true; });
+  let lastTs = performance.now();
+  (function loop(ts) {
+    requestAnimationFrame(loop);
+    ts = ts || performance.now();
+    const dt = Math.min(0.1, Math.max(0, (ts - lastTs) / 1000)); lastTs = ts;
+    if (sim.on && sim.playing) {
+      sim.t += dt * sim.speed;
+      if (sim.t >= sim.dur) { sim.t = sim.dur; sim.playing = false; simButtons(); }
+      simUpdate();
+    }
+    controls.update();
+    if (needsRender || controls.autoRotate) {
+      renderer.render(scene, camera); placeLabels(); needsRender = false;
+    }
+  })();
+})();
+</script>
