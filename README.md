@@ -6,6 +6,20 @@ A 3D-printable spearfishing throw flasher shaped and patterned like a Pacific ch
 
 **Sink test video:** [files/mackerel_sink_test_headdown.mp4](files/mackerel_sink_test_headdown.mp4) – the head-down design with its default weighting, simulated down to 10 m.
 
+## 8-inch prints at 66% infill (`files/onepiece_8in/`)
+
+Scaled to an 8 in (203 mm) fish and re-simulated for the library's **66% infill**. At 66% the body is roughly one-third air inside, so the printed plastic comes out almost neutral in sea water (about +1 g). Every design therefore has a 12 mm lead bore between the eyes (holds up to ~13 g), covered by 12 mm stick-on eyes. The head-down body also keeps two small sealed air voids (~4.8 cc) in the rear, which print hollow at any infill and are what tip the nose down.
+
+| File | Print size L × W × H (mm) | PLA at 66% | Lead | Simulated fall |
+|---|---|---|---|---|
+| `headdown_onepiece.stl` | 176 × 84 × 50 | ~37 g (~$6) | ~8.5 g, trimmed to 4 g in-water | 0.3 m/s, ~50° head-down, rocking, spiral |
+| `headdown_kick10_onepiece.stl`, `…kick30…` | 181 × 80 × 50, 171 × 87 × 50 | ~37 g | same | spiral tuning (10° / 30° tail kick) |
+| `scurve_onepiece.stl` | 141 × 90 × 50 | ~42 g (~$7) | ~8 g | ~0.18 m/s, steep head-first, no flutter |
+| `ucurl_onepiece.stl` | 93 × 77 × 50 | ~42 g | ~3 g | ~0.13 m/s, level, rocking ±20° |
+| `straight_onepiece.stl` | 203 × 17 × 50 | ~42 g | ~1–2 g | ~0.3 m/s, head-first, spins |
+
+Trim procedure (same as above, 8-inch targets): after painting, tape the eye holes, weigh the fish under water (**B**, about 43 g), weigh it dry with its lead and epoxy plugs (**D**), and set the lead so that **D − 1.025 × B** equals **4.0 g** for the head-down, **8 g** for the S-curve, **3 g** for the U-curl and **2 g** for the straight. In the simulation the head-down then sinks at 0.22–0.31 m/s and goes head-first in 11 of 12 runs; the spiral rate stays the uncertain part (use the kick variants).
+
 ## One-piece PLA prints (OSU Valley Library)
 
 The library prints PLA only (one material and colour, no multi-material). Files must be STL under 5 MB, and it charges 16¢ per gram. Every design below prints as **one piece**, so there are no halves to glue. Each file is oriented upright (back up) so the body bend lies flat in the print plane, and only the belly needs supports.
