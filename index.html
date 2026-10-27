@@ -838,64 +838,6 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
 
   // ---- the wahoo (funny branch): a ~1.5 m procedural Acanthocybium, attracted by the flash
   const wahoo = new THREE.Group(); wahoo.visible = false; scene.add(wahoo);
-<<<<<<< Updated upstream
-  const WL = 1200;                                       // mm
-  (function buildWahoo() {
-    const segs = 40, rings = 18, V = [], N = [], UV = [], F = [];
-    const prof = u => {                                  // half-height / half-width along the body
-      const h = 0.085 * Math.sin(Math.PI * Math.pow(u, 0.8)) + 0.012 * (1 - u);
-      return [h * WL, 0.55 * h * WL];
-    };
-    for (let i = 0; i <= segs; i++) {
-      const u = i / segs, [a, b] = prof(u);
-      for (let j = 0; j <= rings; j++) {
-        const th = j / rings * 2 * Math.PI, cy = Math.cos(th), sz = Math.sin(th);
-        V.push(u * WL, a * cy, b * sz); N.push(0, cy / a, sz / b); UV.push(u, j / rings);
-      }
-    }
-    for (let i = 0; i < segs; i++) for (let j = 0; j < rings; j++) {
-      const p = i * (rings + 1) + j, q = p + rings + 1;
-      F.push(p, p + 1, q, p + 1, q + 1, q);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.Float32BufferAttribute(V, 3));
-    g.setAttribute("uv", new THREE.Float32BufferAttribute(UV, 2));
-    g.setIndex(F); g.computeVertexNormals();
-    // vertical bars: dark steel-blue back fading to silver belly, 25 wavy bars
-    const cv = document.createElement("canvas"); cv.width = 1024; cv.height = 256;
-    const cx = cv.getContext("2d");
-    const grd = cx.createLinearGradient(0, 0, 0, 256);
-    grd.addColorStop(0, "#1b3a52"); grd.addColorStop(0.28, "#1b3a52"); grd.addColorStop(0.5, "#7f98a8");
-    grd.addColorStop(0.75, "#d9e3ea"); grd.addColorStop(1, "#1b3a52");
-    cx.fillStyle = grd; cx.fillRect(0, 0, 1024, 256);
-    cx.strokeStyle = "rgba(20,45,70,.75)"; cx.lineWidth = 7;
-    for (let k = 0; k < 26; k++) {
-      const x = 160 + k * 31;
-      cx.beginPath();
-      for (let y = 0; y <= 256; y += 8) cx.lineTo(x + 6 * Math.sin(y / 22 + k), y);
-      cx.stroke();
-    }
-    const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.wrapT = THREE.RepeatWrapping;
-    const body = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: tex, metalness: 0.55, roughness: 0.3, envMapIntensity: 1.1 }));
-    body.rotation.z = 0; wahoo.add(body);
-    const finMat = new THREE.MeshStandardMaterial({ color: 0x1d3f5a, metalness: 0.3, roughness: 0.5, side: THREE.DoubleSide });
-    // tail (lunate), dorsal (long low first dorsal), pectorals
-    const tri = (pts) => { const sh = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], p[1]))); return new THREE.ShapeGeometry(sh); };
-    const tailM = new THREE.Mesh(tri([[0, 0], [100, 190], [20, 0], [100, -190]]), finMat); tailM.position.x = WL - 10; wahoo.add(tailM);
-    const dors = new THREE.Mesh(tri([[0, 0], [40, 95], [330, 70], [540, 30], [560, 0]]), finMat); dors.position.set(0.28 * WL, 0.075 * WL, 0); wahoo.add(dors);
-    const dors2 = new THREE.Mesh(tri([[0, 0], [30, 70], [90, 0]]), finMat); dors2.position.set(0.70 * WL, 0.05 * WL, 0); wahoo.add(dors2);
-    const anal = new THREE.Mesh(tri([[0, 0], [30, -65], [90, 0]]), finMat); anal.position.set(0.72 * WL, -0.045 * WL, 0); wahoo.add(anal);
-    [1, -1].forEach(sgn => {
-      const pec = new THREE.Mesh(tri([[0, 0], [150, -30], [60, -110]]), finMat);
-      pec.position.set(0.3 * WL, -0.01 * WL, sgn * 0.05 * WL); pec.rotation.x = sgn * 0.9; wahoo.add(pec);
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(12, 16, 12), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 }));
-      eye.position.set(0.09 * WL, 0.02 * WL, sgn * 0.052 * WL * 0.9); wahoo.add(eye);
-    });
-    // jaw line
-    const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.11 * WL, 2, 0.08 * WL), new THREE.MeshStandardMaterial({ color: 0x0e2230 }));
-    jaw.position.set(0.055 * WL, -0.012 * WL, 0); wahoo.add(jaw);
-  })();
-=======
   const WL = 1250;                                       // mm, swimming length of the wahoo in the scene
   const WSCALE = WL / 308;                               // the decoy model is 308 mm long
   let wahooBody = null, wahooRest = null, wahooX = null;
@@ -941,7 +883,6 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
       if (i === 0) m.geometry.computeVertexNormals();
     });
   }
->>>>>>> Stashed changes
   // wahoo script, in seconds relative to the flasher reaching 5 m (pass) and 8 m (strike)
   const WAHOO = { seen: false, struck: false, tPass: 0, tStrike: 0 };
   const wTmp = new THREE.Vector3(), wTmp2 = new THREE.Vector3();
@@ -978,11 +919,7 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
       const nxt = ctr.clone().addScaledVector(R, rad * Math.cos(ang + 0.06)).addScaledVector(B, rad * Math.sin(ang + 0.06) * 0.6);
       dir = nxt.sub(pos).normalize(); swim = 1.3;
     } else if (t < ts) {                                // strike: from screen-left, slightly behind, straight at the flasher
-<<<<<<< Updated upstream
-      const u = (t - (ts - 1.6)) / 1.6, e = u * u;
-=======
       const u = (t - (ts - 1.6)) / 1.6, e = u * u * u;
->>>>>>> Stashed changes
       const start = at(WAHOO.p8, -3400, 300, 700);
       pos = start.clone().lerp(WAHOO.p8, e);
       dir = WAHOO.p8.clone().sub(start).normalize(); swim = 2.5;
@@ -991,15 +928,6 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
       const u = (t - ts) / 2.5;
       pos = WAHOO.p8.clone().addScaledVector(WAHOO.strikeDir, 6000 * u);
       dir = WAHOO.strikeDir; swim = 2.5;
-<<<<<<< Updated upstream
-      wahoo.children.forEach(m => { if (m.material) { m.material.transparent = true; m.material.opacity = 1 - u; } });
-    }
-    wahoo.visible = true;
-    wahoo.position.copy(pos).addScaledVector(dir, -0.5 * WL);
-    wahoo.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
-    const beat = Math.sin(t * 7 * swim) * 0.06 * swim;
-    wahoo.children.forEach((m, i) => { if (i === 0) m.rotation.y = beat * 0.3; else if (m.position.x > 0.6 * WL) m.rotation.y = beat; });
-=======
       wahoo.children.forEach(m => { m.material.transparent = true; m.material.opacity = 1 - u; });
     }
     wahoo.visible = true;
@@ -1015,17 +943,12 @@ window.FISH_BUMP_C='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCA
     wahoo.quaternion.setFromRotationMatrix(m4);
     wahoo.rotateX(bank);
     wahooSwim(t, swim);
->>>>>>> Stashed changes
     fish.visible = t < ts;
   }
   function wahooPlan() {
     WAHOO.tPass = null; WAHOO.struck = false;
-<<<<<<< Updated upstream
-    wahoo.children.forEach(m => { if (m.material) { m.material.transparent = false; m.material.opacity = 1; } });
-=======
     wahoo.children.forEach(m => { m.material.transparent = false; m.material.opacity = 1; });
     WAHOO.lastDir = null;
->>>>>>> Stashed changes
     if (state.design !== "wounded") return;
     const t3 = timeAtDepth(3), t5 = timeAtDepth(5), t8 = timeAtDepth(8);
     if (t3 === null || t5 === null || t8 === null) return;
